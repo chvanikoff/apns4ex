@@ -1,6 +1,15 @@
 defmodule APNS do
   use Application
 
+  def start(env) when env in [:dev, :prod] do
+    APNS.Connection.Supervisor.start(env)
+  end
+
+  def stop(pid) do
+    Supervisor.terminate_child(APNS.Connection.Supervisor, pid)
+  end
+  
+  
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
@@ -9,6 +18,7 @@ defmodule APNS do
     children = [
       # Define workers and child supervisors to be supervised
       # worker(APNS.Worker, [arg1, arg2, arg3]),
+      supervisor(APNS.Connection.Supervisor, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
