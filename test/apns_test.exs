@@ -19,8 +19,18 @@ defmodule APNSTest do
     |> Map.put(:token, String.duplicate("0", 64))
     |> Map.put(:alert, String.duplicate("lorem ipsum", 100))
     payload = APNS.Connection.Worker.build_payload(msg)
-    assert String.length(payload) == 256
-    assert payload =~ "..."
+    assert byte_size(payload) == 256
+    assert payload =~ "…"
+  end
+
+  test "PN with UTF8-characters is properly truncated" do
+    msg = %APNS.Message{}
+    |> Map.put(:token, String.duplicate("0", 64))
+    |> Map.put(:alert, String.duplicate("ありがとう", 30))
+    payload = APNS.Connection.Worker.build_payload(msg)
+    # When truncating UTF8 chars, payload size may be less than 256
+    assert byte_size(payload) <= 256
+    assert payload =~ "…"
   end
 
   test "If PN length is less than 256, it is not truncated" do
@@ -29,8 +39,8 @@ defmodule APNSTest do
     |> Map.put(:token, String.duplicate("0", 64))
     |> Map.put(:alert, string)
     payload = APNS.Connection.Worker.build_payload(msg)
-    assert String.length(payload) == @payload_min_size + String.length(string)
-    refute payload =~ "..."
+    assert byte_size(payload) == @payload_min_size + byte_size(string)
+    refute payload =~ "…"
   end
 
   test "Ellipsis absent when message size is exactly 256 bytes" do
@@ -39,7 +49,17 @@ defmodule APNSTest do
     |> Map.put(:token, String.duplicate("0", 64))
     |> Map.put(:alert, string)
     payload = APNS.Connection.Worker.build_payload(msg)
-    assert String.length(payload) == @payload_min_size + String.length(string)
-    refute payload =~ "..."
+    assert byte_size(payload) == @payload_min_size + byte_size(string)
+    refute payload =~ "…"
+  end
+
+  test "Payload can be built for any characters" do
+    string = "test123 тест テスト !@#$%"
+    msg = %APNS.Message{}
+    |> Map.put(:token, String.duplicate("0", 64))
+    |> Map.put(:alert, string)
+    payload = APNS.Connection.Worker.build_payload(msg)
+    assert byte_size(payload) == @payload_min_size + byte_size(string)
+    refute payload =~ "…"
   end
 end

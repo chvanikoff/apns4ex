@@ -150,24 +150,27 @@ defmodule APNS.Connection.Worker do
       |> Map.merge(msg.extra)
     end
     json = Poison.encode! payload
-    length_diff = String.length(json) - 256
-    length_alert = String.length msg.alert
-    case length_diff do
-      i when i <= 0 -> json
-      i when i >= length_alert -> {:error, {:payload_size_exceeded, length_diff}}
-      i ->
-        cut = length_alert - i - 1
-        alert = String.slice msg.alert, 0..cut
-        alert = case String.length alert do
-          i when i > 3 ->
-            cut = String.length(alert) - 4
-            String.slice(alert, 0..cut) <> "..."
-          _ -> alert
-        end
+    length_diff = byte_size(json) - 256
+    length_alert = byte_size msg.alert
+    cond do
+      length_diff <= 0 -> json
+      length_diff >= length_alert -> {:error, {:payload_size_exceeded, length_diff}}
+      true ->
+        alert = truncate(msg.alert, length_alert - length_diff)
         Poison.encode! %{payload | aps: %{aps | alert: alert}}
     end
   end
 
+  defp truncate(string, size) do
+    string2 = string <> "…"
+    if byte_size(string2) <= size do
+      string2
+    else
+      string = String.slice(string, 0, String.length(string) - 1)
+      truncate(string, size)
+    end
+  end
+  
   defp send_message(socket, msg, payload) do
     frame = <<
       1                         ::  8,
