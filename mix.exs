@@ -17,7 +17,9 @@ defmodule APNS.Mixfile do
     [applications: [
       :logger,
       :public_key,
-      :ssl
+      :ssl,
+      :poison,
+      :hexate
     ],
     mod: {APNS, []}]
   end
@@ -32,6 +34,9 @@ defmodule APNS.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [
+      {:hexate, "~> 0.5"},
+      {:poison, "~> 1.5"}
+    ]
   end
 end

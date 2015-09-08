@@ -2,6 +2,11 @@ defmodule APNS.Connection.Worker do
   use GenServer
   require Logger
 
+  def push(conn, %APNS.Message{} = msg) do
+    GenServer.cast(conn, msg)
+  end
+  
+
   def start_link(type) do
     GenServer.start_link(__MODULE__, type, [])
   end
@@ -45,7 +50,7 @@ defmodule APNS.Connection.Worker do
     case :ssl.connect(host, port, opts, timeout) do
       {:ok, socket} ->
         Logger.debug "[APNS] connected to #{address}"
-        {:noreply, %{state | socket_apple: socket}}
+        {:noreply, %{state | socket_apple: socket, counter: 0}}
       {:error, reason} ->
         Logger.error "[APNS] failed to connect #{address}, reason given: #{inspect reason}"
         {:stop, {:connection_failed, address}, state}
@@ -82,6 +87,113 @@ defmodule APNS.Connection.Worker do
     {:noreply, %{state | socket_feedback: nil}}
   end
 
+  def handle_info({:ssl, socket, data}, %{socket_apple: socket} = state) do
+    case <<state.buffer_apple :: binary, data :: binary>> do
+      <<8 :: 8-unit(1), status :: 8-unit(1), msg_id :: binary-4, rest :: binary>> ->
+        APNS.Error.new(msg_id, status)
+        |> state.config.callback_module.error()
+        case rest do
+          "" -> {:noreply, state}
+          _ -> handle_info({:ssl, socket, rest}, %{state | buffer_apple: ""})
+        end
+      buffer ->
+        {:noreply, %{state | buffer_apple: buffer}}
+    end
+  end
+
+  def handle_info({:ssl, socket, data}, %{socket_feedback: socket} = state) do
+    case <<state.buffer_feedback :: binary, data :: binary>> do
+      <<time :: 8-big-unsigned-integer-unit(4), length :: 8-big-unsigned-integer-unit(2), token :: size(length)-binary, rest :: binary>> ->
+        %APNS.Feedback{time: time, token: Hexate.encode(token)}
+        |> state.config.callback_module.feedback()
+        state = %{state | buffer_feedback: ""}
+        case rest do
+          "" -> {:noreply, state}
+          _ -> handle_info({:ssl, socket, rest}, state)
+        end
+      buffer ->
+        {:noreply, %{state | buffer_feedback: buffer}}
+    end
+  end
+
+  def handle_cast(%APNS.Message{} = msg, state) do
+    case build_payload(msg) do
+      {:error, reason} ->
+        Logger.warn "[APNS] Failed to build payload, message was not sent. Reason given: #{inspect reason}"
+        {:noreply, state}
+      payload ->
+        send_message(state.socket_apple, msg, payload)
+        if (state.counter >= state.config.reconnect_after) do
+          Logger.debug "[APNS] #{state.counter} messages sent, reconnecting"
+          send self, :connect_apple
+        end
+        {:noreply, %{state | counter: state.counter + 1}}
+    end
+  end
+
+  def build_payload(msg) do
+    aps = %{
+      alert: msg.alert,
+      sound: msg.sound
+    }
+    if msg.badge != nil do
+      aps = aps
+      |> Map.put(:badge, msg.badge)
+    end
+    if msg.content_available != nil do
+      aps = aps
+      |> Map.put(:'content-available', msg.content_available)
+    end
+    payload = %{aps: aps}
+    if msg.extra != [] do
+      payload = payload
+      |> Map.merge(msg.extra)
+    end
+    json = Poison.encode! payload
+    length_diff = String.length(json) - 256
+    length_alert = String.length msg.alert
+    case length_diff do
+      i when i <= 0 -> json
+      i when i >= length_alert -> {:error, {:payload_size_exceeded, length_diff}}
+      i ->
+        cut = length_alert - i - 1
+        alert = String.slice msg.alert, 0..cut
+        alert = case String.length alert do
+          i when i > 3 ->
+            cut = String.length(alert) - 4
+            String.slice(alert, 0..cut) <> "..."
+          _ -> alert
+        end
+        Poison.encode! %{payload | aps: %{aps | alert: alert}}
+    end
+  end
+
+  defp send_message(socket, msg, payload) do
+    frame = <<
+      1                         ::  8,
+      32                        ::  16-big,
+      Hexate.decode(msg.token)  ::  binary,
+      2                         ::  8,
+      String.length(payload)    ::  16-big,
+      payload                   ::  binary,
+      3                         ::  8,
+      4                         ::  16-big,
+      msg.id                    ::  binary,
+      4                         ::  8,
+      4                         ::  16-big,
+      msg.expiry                ::  4-big-unsigned-integer-unit(8),
+      5                         ::  8,
+      1                         ::  16-big,
+      msg.priority              ::  8
+    >>
+    packet = <<
+      2                 ::  8,
+      byte_size(frame)  ::  4-big-unsigned-integer-unit(8),
+      frame             ::  binary
+    >>
+    :ssl.send(socket, [packet])
+  end
+
   defp ssl_close(nil), do: nil
   defp ssl_close(socket), do: :ssl.close(socket)
 
@@ -103,6 +215,6 @@ defmodule APNS.Connection.Worker do
       cert_password:    Application.get_env(:apns, :cert_password,    nil),
       timeout:          Application.get_env(:apns, :timeout,          30000),
       feedback_timeout: Application.get_env(:apns, :feedback_timeout, 1200),
-      reconnect_after:  Application.get_env(:apns, :reconnect_after,  500)}
+      reconnect_after:  Application.get_env(:apns, :reconnect_after,  1000)}
   end
 end
