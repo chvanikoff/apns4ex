@@ -177,7 +177,7 @@ defmodule APNS.Connection.Worker do
       32                        ::  16-big,
       Hexate.decode(msg.token)  ::  binary,
       2                         ::  8,
-      String.length(payload)    ::  16-big,
+      byte_size(payload)        ::  16-big,
       payload                   ::  binary,
       3                         ::  8,
       4                         ::  16-big,
