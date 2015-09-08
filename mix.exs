@@ -2,12 +2,20 @@ defmodule APNS.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :apns,
-     version: "0.0.1",
-     elixir: "~> 1.1-beta",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps]
+    [
+      app: :apns,
+      version: "0.0.1",
+      elixir: "~> 1.0",
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      deps: deps,
+      package: package,
+      name: "apns4ex",
+      source_url: "https://github.com/chvanikoff/apns4ex",
+      description: """
+      APNS library for Elixir
+      """
+    ]
   end
 
   # Configuration for the OTP application
@@ -37,6 +45,14 @@ defmodule APNS.Mixfile do
     [
       {:hexate, "~> 0.5"},
       {:poison, "~> 1.5"}
+    ]
+  end
+
+  defp package do
+    [
+      contributors: ["Roman chvanikov"],
+      licenses: ["MIT"],
+      links: %{github: "https://github.com/chvanikoff/apns4ex"}
     ]
   end
 end
