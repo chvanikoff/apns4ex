@@ -26,4 +26,19 @@ defmodule APNS do
     opts = [strategy: :one_for_one, name: APNS.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
+  defmodule Error do
+    defstruct [
+      message_id: nil,
+      status: nil,
+      error: nil
+    ]
+  end
+
+  defmodule Feedback do
+    defstruct [
+      time: nil,
+      token: nil
+    ]
+  end
 end
