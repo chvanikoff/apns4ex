@@ -2,6 +2,9 @@ defmodule APNS.Connection.Worker do
   use GenServer
   require Logger
 
+  @payload_max_old 256
+  @payload_max_new 2048
+
   def push(conn, %APNS.Message{} = msg) do
     GenServer.cast(conn, msg)
   end
@@ -117,7 +120,12 @@ defmodule APNS.Connection.Worker do
   end
 
   def handle_cast(%APNS.Message{} = msg, %{config: config} = state) do
-    case build_payload(msg, config.payload_limit) do
+    limit = case msg.support_old_ios do
+      nil -> config.payload_limit
+      true -> @payload_max_old
+      false -> @payload_max_new
+    end
+    case build_payload(msg, limit) do
       {:error, reason} ->
         Logger.warn "[APNS] Failed to build payload, message was not sent. Reason given: #{inspect reason}"
         {:noreply, state}
@@ -209,8 +217,8 @@ defmodule APNS.Connection.Worker do
         feedback: [host: "feedback.push.apple.com", port: 2196]]
     ]
     payload_limit = case Application.get_env(:apns, :support_old_ios, true) do
-      true -> 256
-      false -> 2048
+      true -> @payload_max_old
+      false -> @payload_max_new
     end
     %{payload_limit:    payload_limit,
       certfile:         certfiles[env],
