@@ -33,4 +33,10 @@ config :apns,
   certfile: [
     dev: "",
     prod: ""
-  ]
+  ],
+  callback_module:  APNS.Callback,
+  keyfile:          nil,
+  cert_password:    nil,
+  timeout:          30000,
+  feedback_timeout: 1200,
+  reconnect_after:  1000
