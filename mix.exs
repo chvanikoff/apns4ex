@@ -50,7 +50,7 @@ defmodule APNS.Mixfile do
 
   defp package do
     [
-      contributors: ["Roman chvanikov"],
+      contributors: ["Roman Chvanikov"],
       licenses: ["MIT"],
       links: %{github: "https://github.com/chvanikoff/apns4ex"}
     ]
