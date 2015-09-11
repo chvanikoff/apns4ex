@@ -82,7 +82,8 @@ defstruct [
   badge: nil,
   sound: "default",
   priority: 10,
-  extra: []
+  extra: [],
+  support_old_ios: nil
 ]
 ```
 - %APNS.Error{}
