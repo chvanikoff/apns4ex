@@ -18,7 +18,7 @@ defmodule APNSTest do
     msg = %APNS.Message{}
     |> Map.put(:token, String.duplicate("0", 64))
     |> Map.put(:alert, String.duplicate("lorem ipsum", 100))
-    payload = APNS.Connection.Worker.build_payload(msg)
+    payload = APNS.Connection.Worker.build_payload(msg, 256)
     assert byte_size(payload) == 256
     assert payload =~ "…"
   end
@@ -27,7 +27,7 @@ defmodule APNSTest do
     msg = %APNS.Message{}
     |> Map.put(:token, String.duplicate("0", 64))
     |> Map.put(:alert, String.duplicate("ありがとう", 30))
-    payload = APNS.Connection.Worker.build_payload(msg)
+    payload = APNS.Connection.Worker.build_payload(msg, 256)
     # When truncating UTF8 chars, payload size may be less than 256
     assert byte_size(payload) <= 256
     assert payload =~ "…"
@@ -38,7 +38,7 @@ defmodule APNSTest do
     msg = %APNS.Message{}
     |> Map.put(:token, String.duplicate("0", 64))
     |> Map.put(:alert, string)
-    payload = APNS.Connection.Worker.build_payload(msg)
+    payload = APNS.Connection.Worker.build_payload(msg, 256)
     assert byte_size(payload) == @payload_min_size + byte_size(string)
     refute payload =~ "…"
   end
@@ -48,7 +48,7 @@ defmodule APNSTest do
     msg = %APNS.Message{}
     |> Map.put(:token, String.duplicate("0", 64))
     |> Map.put(:alert, string)
-    payload = APNS.Connection.Worker.build_payload(msg)
+    payload = APNS.Connection.Worker.build_payload(msg, 256)
     assert byte_size(payload) == @payload_min_size + byte_size(string)
     refute payload =~ "…"
   end
@@ -58,7 +58,7 @@ defmodule APNSTest do
     msg = %APNS.Message{}
     |> Map.put(:token, String.duplicate("0", 64))
     |> Map.put(:alert, string)
-    payload = APNS.Connection.Worker.build_payload(msg)
+    payload = APNS.Connection.Worker.build_payload(msg, 256)
     assert byte_size(payload) == @payload_min_size + byte_size(string)
     refute payload =~ "…"
   end

@@ -116,8 +116,8 @@ defmodule APNS.Connection.Worker do
     end
   end
 
-  def handle_cast(%APNS.Message{} = msg, state) do
-    case build_payload(msg) do
+  def handle_cast(%APNS.Message{} = msg, %{config: config} = state) do
+    case build_payload(msg, config.payload_limit) do
       {:error, reason} ->
         Logger.warn "[APNS] Failed to build payload, message was not sent. Reason given: #{inspect reason}"
         {:noreply, state}
@@ -131,7 +131,7 @@ defmodule APNS.Connection.Worker do
     end
   end
 
-  def build_payload(msg) do
+  def build_payload(msg, payload_limit) do
     aps = %{
       alert: msg.alert,
       sound: msg.sound
@@ -150,7 +150,7 @@ defmodule APNS.Connection.Worker do
       |> Map.merge(msg.extra)
     end
     json = Poison.encode! payload
-    length_diff = byte_size(json) - 256
+    length_diff = byte_size(json) - payload_limit
     length_alert = byte_size msg.alert
     cond do
       length_diff <= 0 -> json
@@ -208,7 +208,12 @@ defmodule APNS.Connection.Worker do
       prod: [apple: [host: "gateway.push.apple.com", port: 2195],
         feedback: [host: "feedback.push.apple.com", port: 2196]]
     ]
-    %{certfile:         certfiles[env],
+    payload_limit = case Application.get_env(:apns, :support_old_ios, true) do
+      true -> 256
+      false -> 2048
+    end
+    %{payload_limit:    payload_limit,
+      certfile:         certfiles[env],
       apple_host:       hosts[env][:apple][:host],
       apple_port:       hosts[env][:apple][:port],
       feedback_host:    hosts[env][:feedback][:host],

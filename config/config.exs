@@ -39,4 +39,5 @@ config :apns,
   cert_password:    nil,
   timeout:          30,
   feedback_timeout: 1200,
-  reconnect_after:  1000
+  reconnect_after:  1000,
+  support_old_ios:  true
