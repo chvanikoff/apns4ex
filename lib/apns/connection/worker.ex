@@ -48,7 +48,7 @@ defmodule APNS.Connection.Worker do
     ssl_close(state.socket_apple)
     host = to_char_list(config.apple_host)
     port = config.apple_port
-    timeout = config.timeout
+    timeout = config.timeout * 1000
     address = "#{config.apple_host}:#{config.apple_port}"
     case :ssl.connect(host, port, opts, timeout) do
       {:ok, socket} ->
@@ -65,7 +65,7 @@ defmodule APNS.Connection.Worker do
     host = to_char_list(config.feedback_host)
     port = config.feedback_port
     opts = Keyword.delete(opts, :reuse_sessions)
-    timeout = config.timeout
+    timeout = config.timeout * 1000
     address = "#{config.feedback_host}:#{config.feedback_port}"
     case :ssl.connect(host, port, opts, timeout) do
       {:ok, socket} ->
@@ -84,7 +84,7 @@ defmodule APNS.Connection.Worker do
   end
 
   def handle_info({:ssl_closed, socket}, %{socket_feedback: socket} = state) do
-    timeout = state.config.feedback_timeout
+    timeout = state.config.feedback_timeout * 1000
     Logger.debug "[APNS] Feedback socket was closed. Reconnect in #{timeout}s."
     :erlang.send_after(timeout, self, :connect_feedback)
     {:noreply, %{state | socket_feedback: nil}}
@@ -209,28 +209,41 @@ defmodule APNS.Connection.Worker do
   defp ssl_close(socket), do: :ssl.close(socket)
 
   defp get_config(env) do
-    certfiles = Application.get_env(:apns, :certfile)
+    opts = [
+      certfile: nil,
+      cert_password: nil,
+      keyfile: nil,
+      callback_module: APNS.Callback,
+      timeout: 30,
+      feedback_timeout: 1200,
+      reconnect_after: 1000,
+      support_old_ios: true
+    ]
+    config = Enum.reduce opts, %{}, fn({key, default}, map) ->
+      val = Application.get_env(:apns, key, default)
+      if is_list(val) do
+        val = val[env]
+      end
+      Map.put(map, key, val)
+    end
+
     hosts = [
       dev: [apple: [host: "gateway.sandbox.push.apple.com", port: 2195],
         feedback: [host: "feedback.sandbox.push.apple.com", port: 2196]],
       prod: [apple: [host: "gateway.push.apple.com", port: 2195],
         feedback: [host: "feedback.push.apple.com", port: 2196]]
     ]
-    payload_limit = case Application.get_env(:apns, :support_old_ios, true) do
+    payload_limit = case config.support_old_ios do
       true -> @payload_max_old
       false -> @payload_max_new
     end
-    %{payload_limit:    payload_limit,
-      certfile:         certfiles[env],
-      apple_host:       hosts[env][:apple][:host],
-      apple_port:       hosts[env][:apple][:port],
-      feedback_host:    hosts[env][:feedback][:host],
-      feedback_port:    hosts[env][:feedback][:port],
-      callback_module:  Application.get_env(:apns, :callback_module,  APNS.Callback),
-      keyfile:          Application.get_env(:apns, :key_file,         nil),
-      cert_password:    Application.get_env(:apns, :cert_password,    nil),
-      timeout:          Application.get_env(:apns, :timeout,          30) * 1000,
-      feedback_timeout: Application.get_env(:apns, :feedback_timeout, 1200) * 1000,
-      reconnect_after:  Application.get_env(:apns, :reconnect_after,  1000)}
+    config2 = %{
+      payload_limit: payload_limit,
+      apple_host:    hosts[env][:apple][:host],
+      apple_port:    hosts[env][:apple][:port],
+      feedback_host: hosts[env][:feedback][:host],
+      feedback_port: hosts[env][:feedback][:port]
+    }
+    Map.merge(config, config2)
   end
 end

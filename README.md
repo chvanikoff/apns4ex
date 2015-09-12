@@ -22,6 +22,8 @@ WIP
 
 1. Config the APNS app
 
+You can provide config as `key: value` to use the same value for both envs or `key: [dev: dev_value, prod: prod_value]` to use different values for :dev and :prod env
+
 - Required APNS config will only include paths to certificates:
 ```elixir
 config :apns,
