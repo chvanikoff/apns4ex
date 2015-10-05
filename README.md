@@ -9,7 +9,7 @@ WIP
   1. Add apns to your list of dependencies in mix.exs:
 
         def deps do
-          [{:apns, "~> 0.0.1"}]
+          [{:apns, "~> 0.0.5"}]
         end
 
   2. Ensure apns is started before your application:
@@ -101,5 +101,18 @@ defstruct [
 defstruct [
   time: nil,
   token: nil
+]
+```
+- %APNS.Message.Loc{}
+```elixir
+defstruct [
+  title: "",
+  body: "",
+  title_loc_key: nil,
+  title_loc_args: nil,
+  action_loc_key: nil,
+  loc_key: "",
+  loc_args: [],
+  launch_image: nil
 ]
 ```

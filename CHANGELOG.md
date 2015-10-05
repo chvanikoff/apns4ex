@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.5 (2015-10-5)
+
+* Localized alerts are now supported
+
 ## 0.0.4 (2015-9-12)
 
 * More flexible configs: now you can provide config values per environment or use same value for both :dev and :prod
