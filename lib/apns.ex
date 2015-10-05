@@ -1,6 +1,18 @@
 defmodule APNS do
   use Application
   defmodule Message do
+    defmodule Loc do
+      defstruct [
+        title: "",
+        body: "",
+        title_loc_key: nil,
+        title_loc_args: nil,
+        action_loc_key: nil,
+        loc_key: "",
+        loc_args: [],
+        launch_image: nil
+      ]
+    end
     defstruct [
       id: nil,
       expiry: 86400000,
