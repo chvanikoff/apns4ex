@@ -51,7 +51,7 @@ config :apns,
 
 3. Start pushing your PNs via APNS.push/1 and APNS.push/3:
 ```Elixir
-message = %APNS.Message.new
+message = APNS.Message.new
 message = message
 |> Map.put(:token, "0000000000000000000000000000000000000000000000000000000000000000")
 |> Map.put(:alert, "Hello world!")
