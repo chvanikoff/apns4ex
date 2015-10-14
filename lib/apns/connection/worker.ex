@@ -131,8 +131,9 @@ defmodule APNS.Connection.Worker do
       false -> @payload_max_new
     end
     case build_payload(msg, limit) do
-      {:error, reason} ->
-        Logger.warn "[APNS] Failed to build payload, message was not sent. Reason given: #{inspect reason}"
+      {:error, :payload_size_exceeded} ->
+        APNS.Error.new(msg.id, 7)
+        |> state.config.callback_module.error()
         {:noreply, state}
       payload ->
         send_message(state.socket_apple, msg, payload)
@@ -170,7 +171,7 @@ defmodule APNS.Connection.Worker do
     end
     cond do
       length_diff <= 0 -> json
-      length_diff >= length_alert -> {:error, {:payload_size_exceeded, length_diff}}
+      length_diff >= length_alert -> {:error, :payload_size_exceeded}
       true ->
         alert = truncate(msg.alert, length_alert - length_diff)
         unless is_binary(alert) do
