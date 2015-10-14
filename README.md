@@ -9,7 +9,7 @@ WIP
   1. Add apns to your list of dependencies in mix.exs:
 
         def deps do
-          [{:apns, "~> 0.0.5"}]
+          [{:apns, "~> 0.0.6"}]
         end
 
   2. Ensure apns is started before your application:
