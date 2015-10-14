@@ -119,6 +119,11 @@ defmodule APNS.Connection.Worker do
     end
   end
 
+  def handle_cast(%APNS.Message{token: token} = msg, state) when byte_size(token) != 64 do
+    APNS.Error.new(msg.id, 5)
+    |> state.config.callback_module.error()
+    {:noreply, state}
+  end
   def handle_cast(%APNS.Message{} = msg, %{config: config} = state) do
     limit = case msg.support_old_ios do
       nil -> config.payload_limit
