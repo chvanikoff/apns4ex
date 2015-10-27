@@ -2,14 +2,16 @@
 
 The library was inspired by [Apns4erl](https://github.com/inaka/apns4erl)
 
-WIP
+## Warning
+
+This library is a work in progress and it's API is subject to change till `v0.1`, please consider use of `== ver` operator rather than `~> ver` when requiring `apns4ex` as a dependency or your application may be broken with next release of the library.
 
 ## Installation
 
   1. Add apns to your list of dependencies in mix.exs:
 
         def deps do
-          [{:apns, "~> 0.0.6"}]
+          [{:apns, "== 0.0.6"}]
         end
 
   2. Ensure apns is started before your application:
