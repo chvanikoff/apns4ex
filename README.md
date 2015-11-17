@@ -11,7 +11,7 @@ This library is a work in progress and it's API is subject to change till `v0.1`
   1. Add apns to your list of dependencies in mix.exs:
 
         def deps do
-          [{:apns, "== 0.0.6"}]
+          [{:apns, "== 0.0.7"}]
         end
 
   2. Ensure apns is started before your application:
@@ -20,38 +20,62 @@ This library is a work in progress and it's API is subject to change till `v0.1`
           [applications: [:apns]]
         end
 
-## Using
+## Usage
 
-1. Config the APNS app
+Config the APNS app and define pools
 
-You can provide config as `key: value` to use the same value for both envs or `key: [dev: dev_value, prod: prod_value]` to use different values for :dev and :prod env
-
-- Required APNS config will only include paths to certificates:
 ```elixir
 config :apns,
-  certfile: [
-    dev: "/path/to/dev_cert.pem",
-    prod: "/path/to/prod_cert.pem"
+  # Here goes "global" config applied as default to all pools started if not overwritten by pool-specific value
+  callback_module:  APNS.Callback,
+  timeout:          30,
+  feedback_interval: 1200,
+  reconnect_after:  1000,
+  support_old_ios:  true,
+  # Here are pools configs. Any value from "global" config can be overwritten in any single pool config
+  pools: [
+    # app1_dev_pool is the pool_name
+    app1_dev_pool: [
+      env: :dev,push server)
+      pool_size: 10,
+      pool_max_overflow: 5,
+      # and this is overwritten config key
+      certfile: "/path/to/app1_dev.pem"
+    ],
+    app1_prod_pool: [
+      env: :prod,
+      certfile: "/path/to/app1_prod.pem",
+      pool_size: 100,
+      pool_max_overflow: 50
+    ],
   ]
 ```
-- Optional config is the following:
-```elixir
-config :apns,
-  callback_module:  APNS.Callback,
-  keyfile:          nil,
-  cert_password:    nil,
-  timeout:          30000,
-  feedback_timeout: 1200,
-  reconnect_after:  1000
-```
 
-2. Start a :dev (for Apple sandbox server) or :prod (for Apple prod server) worker:
+### Config keys
 
-```elixir
-{:ok, pid} = APNS.start :dev
-```
+Name               | Default value  | Description
+:----------------- | :------------- | :-------------------
+certfile           | nil            | Path to APNS certificate file
+cert_password      | nil            | APNS certificate password (if any)
+keyfile            | nil            | Path to APNS keyfile
+callback_module    | APNS.Callback  | This module will receive all error and feedback messages from APNS
+timeout            | 30             | Connection timeout in seconds
+feedback_interval  | 1200           | The app will check Apple feedback server every `feedback_interval` seconds
+reconnect_after    | 1000           | Will reconnect after 1000 notifications sent
+support_old_ios    | true           | Push notifications are limited by 256 bytes (2kb if false), this option can be changed per message individually
+pools              | []             | List of pools to start
 
-3. Start pushing your PNs via APNS.push/1 and APNS.push/3:
+### Pool keys
+
+Pool key           | Description
+:----------------- | :-------------
+env                | :dev for Apple sandbox push server or :prod for Apple production push server
+pool_size          | Maximum pool size
+pool_max_overflow  | Maximum number of workers created if pool is empty
+
+All pools defined in config will be started automatically
+
+From here and now you can start pushing your PNs via APNS.push/2 and APNS.push/3:
 ```Elixir
 message = APNS.Message.new
 message = message
@@ -62,11 +86,11 @@ message = message
   "var1" => "val1",
   "var2" => "val2"
 })
-APNS.push pid, message
+APNS.push :app1_dev_pool, message
 ```
 or
 ```Elixir
-APNS.push pid, "0000000000000000000000000000000000000000000000000000000000000000", "Hello world!"
+APNS.push :app1_prod_pool, "0000000000000000000000000000000000000000000000000000000000000000", "Hello world!"
 ```
 
 ## Handling APNS errors and feedback

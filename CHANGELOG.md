@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.7 (2015-11-17)
+
+* Now APNS will automatically start pools defined in config. (see README)
+* Updated config structure (see README)
+* Renamed feedback_timeout config key to feedback_interval as more appropriate (see README)
+* Deprecated manual connection start (see README)
+
 ## 0.0.6 (2015-10-14)
 
 * In case when token size is incorrect (!= 64), error callback will be triggered
