@@ -79,9 +79,9 @@ defmodule APNS.Connection.Worker do
   end
 
   def handle_info({:ssl_closed, socket}, %{socket_feedback: socket} = state) do
-    timeout = state.config.feedback_timeout * 1000
+    interval = state.config.feedback_interval * 1000
     Logger.debug "[APNS] Feedback socket was closed. Reconnect in #{timeout}s."
-    :erlang.send_after(timeout, self, :connect_feedback)
+    :erlang.send_after(interval, self, :connect_feedback)
     {:noreply, %{state | socket_feedback: nil}}
   end
 
@@ -252,7 +252,7 @@ defmodule APNS.Connection.Worker do
       keyfile: nil,
       callback_module: APNS.Callback,
       timeout: 30,
-      feedback_timeout: 1200,
+      feedback_interval: 1200,
       reconnect_after: 1000,
       support_old_ios: true
     ]
