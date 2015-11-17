@@ -44,7 +44,8 @@ defmodule APNS.Mixfile do
   defp deps do
     [
       {:hexate, "~> 0.5"},
-      {:poison, "~> 1.5"}
+      {:poison, "~> 1.5"},
+      {:poolboy, "~> 1.5"}
     ]
   end
 

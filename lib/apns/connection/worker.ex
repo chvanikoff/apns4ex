@@ -5,17 +5,12 @@ defmodule APNS.Connection.Worker do
   @payload_max_old 256
   @payload_max_new 2048
 
-  def push(conn, %APNS.Message{} = msg) do
-    GenServer.cast(conn, msg)
+  def start_link(name) do
+    GenServer.start_link(__MODULE__, name, [])
   end
   
-
-  def start_link(type) do
-    GenServer.start_link(__MODULE__, type, [])
-  end
-  
-  def init(type) do
-    config = get_config(type)
+  def init(name) do
+    config = get_config(name)
     ssl_opts = [
       certfile: Path.absname(config.certfile),
       reuse_sessions: false,
@@ -119,12 +114,12 @@ defmodule APNS.Connection.Worker do
     end
   end
 
-  def handle_cast(%APNS.Message{token: token} = msg, state) when byte_size(token) != 64 do
+  def handle_call(%APNS.Message{token: token} = msg, _from, state) when byte_size(token) != 64 do
     APNS.Error.new(msg.id, 5)
     |> state.config.callback_module.error()
-    {:noreply, state}
+    {:reply, :ok, state}
   end
-  def handle_cast(%APNS.Message{} = msg, %{config: config} = state) do
+  def handle_call(%APNS.Message{} = msg, _from, %{config: config} = state) do
     limit = case msg.support_old_ios do
       nil -> config.payload_limit
       true -> @payload_max_old
@@ -134,14 +129,14 @@ defmodule APNS.Connection.Worker do
       {:error, :payload_size_exceeded} ->
         APNS.Error.new(msg.id, 7)
         |> state.config.callback_module.error()
-        {:noreply, state}
+        {:reply, :ok, state}
       payload ->
         send_message(state.socket_apple, msg, payload)
         if (state.counter >= state.config.reconnect_after) do
           Logger.debug "[APNS] #{state.counter} messages sent, reconnecting"
           send self, :connect_apple
         end
-        {:noreply, %{state | counter: state.counter + 1}}
+        {:reply, :ok, %{state | counter: state.counter + 1}}
     end
   end
 
@@ -250,7 +245,7 @@ defmodule APNS.Connection.Worker do
   defp ssl_close(nil), do: nil
   defp ssl_close(socket), do: :ssl.close(socket)
 
-  defp get_config(env) do
+  defp get_config(name) do
     opts = [
       certfile: nil,
       cert_password: nil,
@@ -261,10 +256,12 @@ defmodule APNS.Connection.Worker do
       reconnect_after: 1000,
       support_old_ios: true
     ]
+    global_conf = Application.get_all_env :apns
+    pool_conf = global_conf[:pools][name]
     config = Enum.reduce opts, %{}, fn({key, default}, map) ->
-      val = Application.get_env(:apns, key, default)
-      if is_list(val) do
-        val = val[env]
+      val = case pool_conf[key] do
+        nil -> Keyword.get(global_conf, key, default)
+        v -> v
       end
       Map.put(map, key, val)
     end
@@ -275,6 +272,7 @@ defmodule APNS.Connection.Worker do
       prod: [apple: [host: "gateway.push.apple.com", port: 2195],
         feedback: [host: "feedback.push.apple.com", port: 2196]]
     ]
+    env = pool_conf[:env]
     payload_limit = case config.support_old_ios do
       true -> @payload_max_old
       false -> @payload_max_new

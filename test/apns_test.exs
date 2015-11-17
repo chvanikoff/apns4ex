@@ -5,12 +5,9 @@ defmodule APNSTest do
 
   @payload_min_size 38
 
-  test "APNS start/stop for :dev and :prod env works correctly"do
-    for env <- [:dev, :prod] do
-      {:ok, pid} = APNS.start(env)
-      assert Process.alive? pid
-      :ok = APNS.stop(pid)
-      refute Process.alive? pid
+  test "APNS starts all the pools from config" do
+    for {pool, _conf} <- Application.get_env(:apns, :pools) do
+      assert {:ready, _, _, _} = :poolboy.status(APNS.pool_name(pool))
     end
   end
 
