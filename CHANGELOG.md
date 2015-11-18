@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.8 (2015-11-18)
+
+* Fixed renamed variable
+* Include poolboy in the apps list
+
 ## 0.0.7 (2015-11-17)
 
 * Now APNS will automatically start pools defined in config. (see README)
