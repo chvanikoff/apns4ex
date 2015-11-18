@@ -27,16 +27,16 @@ Config the APNS app and define pools
 ```elixir
 config :apns,
   # Here goes "global" config applied as default to all pools started if not overwritten by pool-specific value
-  callback_module:  APNS.Callback,
-  timeout:          30,
-  feedback_interval: 1200,
-  reconnect_after:  1000,
-  support_old_ios:  true,
+  callback_module:    APNS.Callback,
+  timeout:            30,
+  feedback_interval:  1200,
+  reconnect_after:    1000,
+  support_old_ios:    true,
   # Here are pools configs. Any value from "global" config can be overwritten in any single pool config
   pools: [
     # app1_dev_pool is the pool_name
     app1_dev_pool: [
-      env: :dev,push server)
+      env: :dev,
       pool_size: 10,
       pool_max_overflow: 5,
       # and this is overwritten config key
