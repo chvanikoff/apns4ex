@@ -4,7 +4,7 @@ defmodule APNS.Mixfile do
   def project do
     [
       app: :apns,
-      version: "0.0.7",
+      version: "0.0.8",
       elixir: "~> 1.0",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -27,7 +27,8 @@ defmodule APNS.Mixfile do
       :public_key,
       :ssl,
       :poison,
-      :hexate
+      :hexate,
+      :poolboy
     ],
     mod: {APNS, []}]
   end
