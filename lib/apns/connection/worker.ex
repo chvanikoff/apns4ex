@@ -226,7 +226,7 @@ defmodule APNS.Connection.Worker do
       payload                   ::  binary,
       3                         ::  8,
       4                         ::  16-big,
-      msg.id                    ::  binary,
+      msg.id                    ::  4-big-unsigned-integer-unit(8),
       4                         ::  8,
       4                         ::  16-big,
       msg.expiry                ::  4-big-unsigned-integer-unit(8),
