@@ -56,7 +56,7 @@ defmodule APNS do
     |> Enum.map(fn({name, conf}) ->
       pool_args = [
         name: {:local, pool_name(name)},
-        worker_module: APNS.Connection.Worker,
+        worker_module: APNS.Worker,
         size: conf[:pool_size],
         max_overflow: conf[:pool_max_overflow],
         strategy: :fifo

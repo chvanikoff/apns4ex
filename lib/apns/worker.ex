@@ -1,4 +1,4 @@
-defmodule APNS.Connection.Worker do
+defmodule APNS.Worker do
   use GenServer
   require Logger
 
