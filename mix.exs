@@ -13,7 +13,7 @@ defmodule APNS.Mixfile do
       name: "apns4ex",
       source_url: "https://github.com/chvanikoff/apns4ex",
       description: """
-      APNS library for Elixir
+      APNS (Apple Push Notification Service) library for Elixir
       """
     ]
   end
