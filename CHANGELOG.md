@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.9 (2015-11-21)
+
+* Message IDs generation improved. Previous implementation based on timestamp could cause bugs under load.
+* This release is mostly refactoring. If you use any of modules directly (e.g. you define your own pool of workers using APNS.Connection.Worker), please take a look at new modules names and the structure.
+
 ## 0.0.8 (2015-11-18)
 
 * Fixed renamed variable
