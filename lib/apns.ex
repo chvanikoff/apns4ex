@@ -28,7 +28,7 @@ defmodule APNS do
       ]
       :poolboy.child_spec(pool_name(name), pool_args, name)
     end)
-    
+
     opts = [strategy: :one_for_one, name: APNS.Supervisor]
     Supervisor.start_link(children, opts)
   end

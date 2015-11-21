@@ -8,7 +8,7 @@ defmodule APNS.Worker do
   def start_link(name) do
     GenServer.start_link(__MODULE__, name, [])
   end
-  
+
   def init(name) do
     config = get_config(name)
     ssl_opts = [
@@ -215,7 +215,7 @@ defmodule APNS.Worker do
     end
     alert
   end
-  
+
   defp send_message(socket, msg, payload) do
     frame = <<
       1                        :: 8,
