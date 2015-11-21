@@ -87,7 +87,7 @@ defmodule APNS.Worker do
 
   def handle_info({:ssl, socket, data}, %{socket_apple: socket} = state) do
     case <<state.buffer_apple :: binary, data :: binary>> do
-      <<8 :: 8-unit(1), status :: 8-unit(1), msg_id :: binary-4, rest :: binary>> ->
+      <<8 :: 8, status :: 8, msg_id :: binary-4, rest :: binary>> ->
         APNS.Error.new(msg_id, status)
         |> state.config.callback_module.error()
         case rest do
@@ -101,7 +101,7 @@ defmodule APNS.Worker do
 
   def handle_info({:ssl, socket, data}, %{socket_feedback: socket} = state) do
     case <<state.buffer_feedback :: binary, data :: binary>> do
-      <<time :: 8-big-unsigned-integer-unit(4), length :: 8-big-unsigned-integer-unit(2), token :: size(length)-binary, rest :: binary>> ->
+      <<time :: 32, length :: 16, token :: size(length)-binary, rest :: binary>> ->
         %APNS.Feedback{time: time, token: Hexate.encode(token)}
         |> state.config.callback_module.feedback()
         state = %{state | buffer_feedback: ""}
@@ -218,25 +218,25 @@ defmodule APNS.Worker do
   
   defp send_message(socket, msg, payload) do
     frame = <<
-      1                         ::  8,
-      32                        ::  16-big,
-      Hexate.decode(msg.token)  ::  binary,
-      2                         ::  8,
-      byte_size(payload)        ::  16-big,
-      payload                   ::  binary,
-      3                         ::  8,
-      4                         ::  16-big,
-      msg.id                    ::  binary,
-      4                         ::  8,
-      4                         ::  16-big,
-      msg.expiry                ::  4-big-unsigned-integer-unit(8),
-      5                         ::  8,
-      1                         ::  16-big,
-      msg.priority              ::  8
+      1                        :: 8,
+      32                       :: 16,
+      Hexate.decode(msg.token) :: binary,
+      2                        :: 8,
+      byte_size(payload)       :: 16,
+      payload                  :: binary,
+      3                        :: 8,
+      4                        :: 16,
+      msg.id                   :: 32,
+      4                        :: 8,
+      4                        :: 16,
+      msg.expiry               :: 32,
+      5                        :: 8,
+      1                        :: 16,
+      msg.priority             :: 8
     >>
     packet = <<
       2                 ::  8,
-      byte_size(frame)  ::  4-big-unsigned-integer-unit(8),
+      byte_size(frame)  ::  32,
       frame             ::  binary
     >>
     :ssl.send(socket, [packet])
