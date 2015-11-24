@@ -55,7 +55,7 @@ config :apns,
 
 Name               | Default value  | Description
 :----------------- | :------------- | :-------------------
-certfile           | nil            | Path to APNS certificate file
+certfile           | nil            | Path to APNS certificate file or a tuple like `{:my_app, "certs/cert.pem"}` which will use a path relative to the `priv` folder of the given application.
 cert_password      | nil            | APNS certificate password (if any)
 keyfile            | nil            | Path to APNS keyfile
 callback_module    | APNS.Callback  | This module will receive all error and feedback messages from APNS
