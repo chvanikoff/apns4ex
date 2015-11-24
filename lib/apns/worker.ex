@@ -102,7 +102,7 @@ defmodule APNS.Worker do
   def handle_info({:ssl, socket, data}, %{socket_feedback: socket} = state) do
     case <<state.buffer_feedback :: binary, data :: binary>> do
       <<time :: 32, length :: 16, token :: size(length)-binary, rest :: binary>> ->
-        %APNS.Feedback{time: time, token: Hexate.encode(token)}
+        %APNS.Feedback{time: time, token: Base.encode16(token)}
         |> state.config.callback_module.feedback()
         state = %{state | buffer_feedback: ""}
         case rest do
@@ -217,22 +217,23 @@ defmodule APNS.Worker do
   end
 
   defp send_message(socket, msg, payload) do
+    token_bin = msg.token |> Base.decode16!(case: :mixed)
     frame = <<
-      1                        :: 8,
-      32                       :: 16,
-      Hexate.decode(msg.token) :: binary,
-      2                        :: 8,
-      byte_size(payload)       :: 16,
-      payload                  :: binary,
-      3                        :: 8,
-      4                        :: 16,
-      msg.id                   :: 32,
-      4                        :: 8,
-      4                        :: 16,
-      msg.expiry               :: 32,
-      5                        :: 8,
-      1                        :: 16,
-      msg.priority             :: 8
+      1                  :: 8,
+      32                 :: 16,
+      token_bin          :: binary,
+      2                  :: 8,
+      byte_size(payload) :: 16,
+      payload            :: binary,
+      3                  :: 8,
+      4                  :: 16,
+      msg.id             :: 32,
+      4                  :: 8,
+      4                  :: 16,
+      msg.expiry         :: 32,
+      5                  :: 8,
+      1                  :: 16,
+      msg.priority       :: 8
     >>
     packet = <<
       2                 ::  8,
