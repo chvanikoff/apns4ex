@@ -36,10 +36,4 @@ defmodule APNS do
   def pool_name(name) do
     "APNS.Pool.#{to_string(name)}" |> String.to_atom
   end
-
-  def test do
-    t = "ef7321bcb2de4b3acc5031d278590a7ea5527a8ddae11a63d7fcb14c46dbf515"
-    p = :prod_pool
-    APNS.push p, t, "qweasd"
-  end
 end
