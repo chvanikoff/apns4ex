@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.10 (2015-11-24)
+
+* Option to specify certfile location relative to app's priv dir added
+* Removed Hexate dependency
+
 ## 0.0.9 (2015-11-21)
 
 * Message IDs generation improved. Previous implementation based on timestamp could cause bugs under load.

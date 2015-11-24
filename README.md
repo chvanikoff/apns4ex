@@ -11,7 +11,7 @@ This library is a work in progress and it's API is subject to change till `v0.1`
   1. Add apns to your list of dependencies in mix.exs:
 
         def deps do
-          [{:apns, "== 0.0.9"}]
+          [{:apns, "== 0.0.10"}]
         end
 
   2. Ensure apns is started before your application:
