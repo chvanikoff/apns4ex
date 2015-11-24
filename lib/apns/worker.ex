@@ -12,7 +12,7 @@ defmodule APNS.Worker do
   def init(name) do
     config = get_config(name)
     ssl_opts = [
-      certfile: Path.absname(config.certfile),
+      certfile: certfile_path(config.certfile),
       reuse_sessions: false,
       mode: :binary
     ]
@@ -244,6 +244,14 @@ defmodule APNS.Worker do
 
   defp ssl_close(nil), do: nil
   defp ssl_close(socket), do: :ssl.close(socket)
+
+  defp certfile_path(string) when is_binary(string) do
+    Path.expand(string)
+  end
+
+  defp certfile_path({app_name, path}) when is_atom(app_name) do
+    Path.expand(path, :code.priv_dir(app_name))
+  end
 
   defp get_config(name) do
     opts = [
