@@ -158,6 +158,11 @@ defmodule APNS.Worker do
       payload = payload
       |> Map.merge(msg.extra)
     end
+    unless is_binary(msg.alert) do
+      alert = format_loc(msg.alert)
+			payload = %{payload | aps: %{aps | alert: alert}}
+    end
+		
     json = Poison.encode! payload
     length_diff = byte_size(json) - payload_limit
     length_alert = case msg.alert do
@@ -194,8 +199,16 @@ defmodule APNS.Worker do
                                     title_loc_args: title_loc_args, action_loc_key: action_loc_key,
                                     loc_key: loc_key, loc_args: loc_args,
                                     launch_image: launch_image}) do
-    # These are required parameters
-    alert = %{title: title, body: body, "loc-key": loc_key, "loc-args": loc_args}
+
+    alert = %{"loc-key": loc_key, "loc-args": loc_args}
+    if title != "" do
+      alert = alert
+      |> Map.put(:'title', title)
+		end
+    if body != "" do
+      alert = alert
+      |> Map.put(:'body', body)
+		end
     # Following are optional parameters
     if title_loc_key != nil do
       alert = alert
