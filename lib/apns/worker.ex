@@ -147,6 +147,10 @@ defmodule APNS.Worker do
       payload = put_in(payload[:aps][:sound], msg.sound)
     end
 
+    if msg.category != nil do
+      payload = put_in(payload[:aps][:category], msg.category)
+    end
+
     if msg.badge != nil do
       payload = put_in(payload[:aps][:badge], msg.badge)
     end
