@@ -141,46 +141,56 @@ defmodule APNS.Worker do
   end
 
   def build_payload(msg, payload_limit) do
-    aps = %{
-      alert: msg.alert,
-      sound: msg.sound
-    }
+    payload = %{aps: %{}}
+
+    if msg.sound do
+      payload = put_in(payload[:aps][:sound], msg.sound)
+    end
+
     if msg.badge != nil do
-      aps = aps
-      |> Map.put(:badge, msg.badge)
+      payload = put_in(payload[:aps][:badge], msg.badge)
     end
+
     if msg.content_available != nil do
-      aps = aps
-      |> Map.put(:'content-available', msg.content_available)
+      payload = put_in(payload[:aps][:'content-available'], msg.content_available)
     end
-    payload = %{aps: aps}
+
     if msg.extra != [] do
-      payload = payload
-      |> Map.merge(msg.extra)
+      payload = Map.merge(payload, msg.extra)
     end
-    json = Poison.encode! payload
+
+    if is_binary(msg.alert) do
+      payload = put_in(payload[:aps][:alert], msg.alert)
+    else
+      payload = put_in(payload[:aps][:alert], format_loc(msg.alert))
+    end
+
+    encode(payload, payload_limit)
+  end
+
+  defp encode(payload, payload_limit) do
+    json = Poison.encode!(payload)
+
     length_diff = byte_size(json) - payload_limit
-    length_alert = case msg.alert do
-      %APNS.Message.Loc{body: body} -> byte_size(body)
+    length_alert = case payload.aps.alert do
+      %{body: body} -> byte_size(body)
       str when is_binary(str) -> byte_size(str)
     end
+
     cond do
       length_diff <= 0 -> json
       length_diff >= length_alert -> {:error, :payload_size_exceeded}
       true ->
-        alert = truncate(msg.alert, length_alert - length_diff)
-        unless is_binary(alert) do
-          alert = format_loc(alert)
-        end
-        payload = %{payload | aps: %{aps | alert: alert}}
-        Poison.encode! payload
+        payload = put_in(payload[:aps][:alert], truncate(payload.aps.alert, length_alert - length_diff))
+        Poison.encode!(payload)
     end
   end
 
-  defp truncate(%APNS.Message.Loc{body: string} = alert, size) do
+  defp truncate(%{body: string} = alert, size) do
     %{alert | body: truncate(string, size)}
   end
-  defp truncate(string, size) do
+
+  defp truncate(string, size) when is_binary(string) do
     string2 = string <> "…"
     if byte_size(string2) <= size do
       string2
