@@ -12,10 +12,21 @@ defmodule APNS.Worker do
   def init(pool_conf) do
     config = get_config(pool_conf)
     ssl_opts = [
-      certfile: certfile_path(config.certfile),
       reuse_sessions: false,
       mode: :binary
     ]
+    if config.certfile != nil do
+      ssl_opts = ssl_opts
+      |> Dict.put(:certfile, certfile_path(config.certfile))
+    end
+    if config.cert != nil do
+      ssl_opts = ssl_opts
+      |> Dict.put(:cert, config.cert)
+    end
+    if config.key != nil do
+      ssl_opts = ssl_opts
+      |> Dict.put(:key, config.key)
+    end
     if config.keyfile != nil do
       ssl_opts = ssl_opts
       |> Dict.put(:keyfile, Path.absname(config.keyfile))
@@ -270,6 +281,8 @@ defmodule APNS.Worker do
 
   defp get_config(pool_conf) do
     opts = [
+      cert: nil,
+      key: nil,
       certfile: nil,
       cert_password: nil,
       keyfile: nil,
