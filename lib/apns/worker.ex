@@ -22,7 +22,7 @@ defmodule APNS.Worker do
     end
     if config.cert_password != nil do
       ssl_opts = ssl_opts
-      |> Dict.put(:password, config.cert_password)
+      |> Dict.put(:password, to_char_list(config.cert_password))
     end
 
     state = %{
