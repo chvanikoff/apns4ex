@@ -5,12 +5,12 @@ defmodule APNS.Worker do
   @payload_max_old 256
   @payload_max_new 2048
 
-  def start_link(name) do
-    GenServer.start_link(__MODULE__, name, [])
+  def start_link(pool_conf) do
+    GenServer.start_link(__MODULE__, pool_conf, [])
   end
 
-  def init(name) do
-    config = get_config(name)
+  def init(pool_conf) do
+    config = get_config(pool_conf)
     ssl_opts = [
       certfile: certfile_path(config.certfile),
       reuse_sessions: false,
@@ -22,7 +22,7 @@ defmodule APNS.Worker do
     end
     if config.cert_password != nil do
       ssl_opts = ssl_opts
-      |> Dict.put(:password, config.cert_password)
+      |> Dict.put(:password, to_char_list(config.cert_password))
     end
 
     state = %{
@@ -268,7 +268,7 @@ defmodule APNS.Worker do
     Path.expand(path, :code.priv_dir(app_name))
   end
 
-  defp get_config(name) do
+  defp get_config(pool_conf) do
     opts = [
       certfile: nil,
       cert_password: nil,
@@ -280,7 +280,6 @@ defmodule APNS.Worker do
       support_old_ios: true
     ]
     global_conf = Application.get_all_env :apns
-    pool_conf = global_conf[:pools][name]
     config = Enum.reduce opts, %{}, fn({key, default}, map) ->
       val = case pool_conf[key] do
         nil -> Keyword.get(global_conf, key, default)
