@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.11 (2016-01-04)
+
+* Fixed Loc-messages formating/truncating
+* (optional) category field added to APNS message
+* cert_password can be given in both "binary" and 'char list' formats
+* Now you can dynamically add workers to pool with APNS.connect_pool/2
+* `cert: "plaintext certfile contents"` and `key: "plaintext keyfile contents"` options can be provided instead of `cert: "path/to/certfile"` and `keyfile: "path/to/keyfile"`
+
 ## 0.0.10 (2015-11-24)
 
 * Option to specify certfile location relative to app's priv dir added

@@ -11,7 +11,7 @@ This library is a work in progress and it's API is subject to change till `v0.1`
   1. Add apns to your list of dependencies in mix.exs:
 
         def deps do
-          [{:apns, "== 0.0.10"}]
+          [{:apns, "== 0.0.11"}]
         end
 
   2. Ensure apns is started before your application:
@@ -55,9 +55,11 @@ config :apns,
 
 Name               | Default value  | Description
 :----------------- | :------------- | :-------------------
-certfile           | nil            | Path to APNS certificate file or a tuple like `{:my_app, "certs/cert.pem"}` which will use a path relative to the `priv` folder of the given application.
+cert               | nil            | Plaintext APNS certfile content (not needed if `certfile` is specified)
+certfile           | nil            | Path to APNS certificate file or a tuple like `{:my_app, "certs/cert.pem"}` which will use a path relative to the `priv` folder of the given application (not needed if `cert` is specified)
 cert_password      | nil            | APNS certificate password (if any)
-keyfile            | nil            | Path to APNS keyfile
+key                | nil            | Plaintext APNS keyfile content (not needed if `keyfile` is specified)
+keyfile            | nil            | Path to APNS keyfile (not needed if `key` is specified)
 callback_module    | APNS.Callback  | This module will receive all error and feedback messages from APNS
 timeout            | 30             | Connection timeout in seconds
 feedback_interval  | 1200           | The app will check Apple feedback server every `feedback_interval` seconds
