@@ -15,22 +15,26 @@ defmodule APNS do
   end
 
   def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-
-    children = Application.get_env(:apns, :pools)
-    |> Enum.map(fn({name, conf}) ->
-      pool_args = [
-        name: {:local, pool_name(name)},
-        worker_module: APNS.Worker,
-        size: conf[:pool_size],
-        max_overflow: conf[:pool_max_overflow],
-        strategy: :fifo
-      ]
-      :poolboy.child_spec(pool_name(name), pool_args, name)
-    end)
-
     opts = [strategy: :one_for_one, name: APNS.Supervisor]
-    Supervisor.start_link(children, opts)
+    supervisor = Supervisor.start_link([], opts)
+
+    pools = Application.get_env(:apns, :pools)
+    pools |> Enum.map(fn({name, conf}) -> connect_pool(name, conf) end)
+
+    supervisor
+  end
+
+  def connect_pool(name, conf) do
+    pool_args = [
+      name: {:local, pool_name(name)},
+      worker_module: APNS.Worker,
+      size: conf[:pool_size],
+      max_overflow: conf[:pool_max_overflow],
+      strategy: :fifo
+    ]
+    child_spec = :poolboy.child_spec(pool_name(name), pool_args, conf)
+
+    Supervisor.start_child(APNS.Supervisor, child_spec)
   end
 
   def pool_name(name) do
