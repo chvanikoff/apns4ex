@@ -20,12 +20,16 @@ defmodule APNS.Worker do
       |> Dict.put(:certfile, certfile_path(config.certfile))
     end
     if config.cert != nil do
-      ssl_opts = ssl_opts
-      |> Dict.put(:cert, config.cert)
+      ssl_opts = case :public_key.pem_decode(config.cert) do
+                   [{:Certificate, certDer, _}] -> ssl_opts |> Dict.put(:cert, certDer)
+                   _ -> ssl_opts
+                 end
     end
     if config.key != nil do
-      ssl_opts = ssl_opts
-      |> Dict.put(:key, config.key)
+      ssl_opts = case :public_key.pem_decode(config.key) do
+                   [{:RSAPrivateKey, keyDer, _}] -> ssl_opts |> Dict.put(:key, { :RSAPrivateKey, keyDer})
+                   _ -> ssl_opts
+                 end
     end
     if config.keyfile != nil do
       ssl_opts = ssl_opts
