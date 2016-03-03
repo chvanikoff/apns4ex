@@ -265,7 +265,14 @@ defmodule APNS.Worker do
       byte_size(frame)  ::  32,
       frame             ::  binary
     >>
-    :ssl.send(socket, [packet])
+
+    result = :ssl.send(socket, [packet])
+    case result do
+      :ok -> Logger.debug("[APNS] success sent to #{msg.token}")
+      {:error, reason} -> Logger.error("[APNS] error (#{reason}) sending to #{msg.token}")
+    end
+
+    result
   end
 
   defp ssl_close(nil), do: nil
