@@ -66,6 +66,7 @@ defmodule APNS.Worker do
         {:noreply, %{state | socket_apple: socket, counter: 0}}
       {:error, reason} ->
         Logger.error "[APNS] failed to connect #{address}, reason given: #{inspect reason}"
+        :timer.sleep(timeout)
         {:stop, {:connection_failed, address}, state}
     end
   end
@@ -83,6 +84,7 @@ defmodule APNS.Worker do
         {:noreply, %{state | socket_feedback: socket}}
       {:error, reason} ->
         Logger.error "[APNS] failed to connect #{address}, reason given: #{inspect reason}"
+        :timer.sleep(timeout)
         {:stop, {:connection_failed, address}, state}
     end
   end
