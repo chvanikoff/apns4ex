@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.12 (2016-03-10)
+
+* Merged PR #23 which stop a reconnect spam if SSl connect fails
+* Merged PR #22 which allows cert/key to be loaded from a string
+* Merged PR #24 which adds extra logging for sending SSL messages
+
 ## 0.0.11 (2016-01-04)
 
 * Fixed Loc-messages formating/truncating
