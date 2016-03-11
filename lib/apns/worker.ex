@@ -274,8 +274,8 @@ defmodule APNS.Worker do
 
     result = :ssl.send(socket, [packet])
     case result do
-      :ok -> Logger.debug("[APNS] success sent to #{msg.token}")
-      {:error, reason} -> Logger.error("[APNS] error (#{reason}) sending to #{msg.token}")
+      :ok -> Logger.debug("[APNS] success sent #{msg.id} to #{msg.token}")
+      {:error, reason} -> Logger.error("[APNS] error (#{reason}) sending #{msg.id} to #{msg.token}")
     end
 
     result
