@@ -104,7 +104,7 @@ defmodule APNS.Worker do
 
   def handle_info({:ssl, socket, data}, %{socket_apple: socket} = state) do
     case <<state.buffer_apple :: binary, data :: binary>> do
-      <<8 :: 8, status :: 8, msg_id :: binary-4, rest :: binary>> ->
+      <<8 :: 8, status :: 8, msg_id :: integer-32, rest :: binary>> ->
         APNS.Error.new(msg_id, status)
         |> state.config.callback_module.error()
         case rest do
