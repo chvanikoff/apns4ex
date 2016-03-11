@@ -53,27 +53,27 @@ config :apns,
 
 ### Config keys
 
-Name               | Default value  | Description
-:----------------- | :------------- | :-------------------
-cert               | nil            | Plaintext APNS certfile content (not needed if `certfile` is specified)
-certfile           | nil            | Path to APNS certificate file or a tuple like `{:my_app, "certs/cert.pem"}` which will use a path relative to the `priv` folder of the given application (not needed if `cert` is specified)
-cert_password      | nil            | APNS certificate password (if any)
-key                | nil            | Plaintext APNS keyfile content (not needed if `keyfile` is specified)
-keyfile            | nil            | Path to APNS keyfile (not needed if `key` is specified)
-callback_module    | APNS.Callback  | This module will receive all error and feedback messages from APNS
-timeout            | 30             | Connection timeout in seconds
-feedback_interval  | 1200           | The app will check Apple feedback server every `feedback_interval` seconds
-reconnect_after    | 1000           | Will reconnect after 1000 notifications sent
-support_old_ios    | true           | Push notifications are limited by 256 bytes (2kb if false), this option can be changed per message individually
-pools              | []             | List of pools to start
+| Name              | Default value | Description                                                                                                                                                                                  |
+|:------------------|:--------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| cert              | nil           | Plaintext APNS certfile content (not needed if `certfile` is specified)                                                                                                                      |
+| certfile          | nil           | Path to APNS certificate file or a tuple like `{:my_app, "certs/cert.pem"}` which will use a path relative to the `priv` folder of the given application (not needed if `cert` is specified) |
+| cert_password     | nil           | APNS certificate password (if any)                                                                                                                                                           |
+| key               | nil           | Plaintext APNS keyfile content (not needed if `keyfile` is specified)                                                                                                                        |
+| keyfile           | nil           | Path to APNS keyfile (not needed if `key` is specified)                                                                                                                                      |
+| callback_module   | APNS.Callback | This module will receive all error and feedback messages from APNS                                                                                                                           |
+| timeout           | 30            | Connection timeout in seconds                                                                                                                                                                |
+| feedback_interval | 1200          | The app will check Apple feedback server every `feedback_interval` seconds                                                                                                                   |
+| reconnect_after   | 1000          | Will reconnect after 1000 notifications sent                                                                                                                                                 |
+| support_old_ios   | true          | Push notifications are limited by 256 bytes (2kb if false), this option can be changed per message individually                                                                              |
+| pools             | []            | List of pools to start                                                                                                                                                                       |
 
 ### Pool keys
 
-Pool key           | Description
-:----------------- | :-------------
-env                | :dev for Apple sandbox push server or :prod for Apple production push server
-pool_size          | Maximum pool size
-pool_max_overflow  | Maximum number of workers created if pool is empty
+| Pool key          | Description                                                                  |
+|:------------------|:-----------------------------------------------------------------------------|
+| env               | :dev for Apple sandbox push server or :prod for Apple production push server |
+| pool_size         | Maximum pool size                                                            |
+| pool_max_overflow | Maximum number of workers created if pool is empty                           |
 
 All pools defined in config will be started automatically
 
@@ -144,3 +144,9 @@ defstruct [
   launch_image: nil
 ]
 ```
+
+## Contribute
+
+    git clone git@github.com:chvanikoff/apns4ex.git
+    # update config/config.exs with the path to your cert (do not use your live cert)
+    mix test
