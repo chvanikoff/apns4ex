@@ -38,7 +38,7 @@ defmodule APNS.Mixfile do
 
   defp package do
     [
-      maintainers: ["Roman Chvanikov"],
+      maintainers: ["Roman Chvanikov", "Vladimir Reshetnikov"],
       licenses: ["MIT"],
       links: %{github: "https://github.com/chvanikoff/apns4ex"}
     ]
