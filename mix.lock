@@ -1,2 +1,2 @@
-%{"poison": {:hex, :poison, "1.5.0"},
+%{"poison": {:hex, :poison, "2.1.0"},
   "poolboy": {:hex, :poolboy, "1.5.1"}}

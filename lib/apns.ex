@@ -10,7 +10,7 @@ defmodule APNS do
 
   def push(pool, %APNS.Message{} = msg) do
     :poolboy.transaction(pool_name(pool), fn(pid) ->
-      GenServer.call(pid, msg)
+      GenServer.cast(pid, msg)
     end)
   end
 

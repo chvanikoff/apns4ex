@@ -31,7 +31,7 @@ defmodule APNS.Mixfile do
 
   defp deps do
     [
-      {:poison, "~> 1.5"},
+      {:poison, "~> 2.1"},
       {:poolboy, "~> 1.5"}
     ]
   end
