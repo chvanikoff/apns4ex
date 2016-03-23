@@ -14,11 +14,12 @@ defmodule APNS.Message do
   ]
 
   def new do
-    make_ref
-    |> :erlang.phash2
-    |> new
+    make_ref() |> :erlang.phash2() |> new()
   end
-  def new(id), do: %__MODULE__{id: id}
+
+  def new(id) do
+    %__MODULE__{id: id}
+  end
 
   defmodule Loc do
     defstruct [

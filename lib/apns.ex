@@ -2,15 +2,17 @@ defmodule APNS do
   use Application
 
   def push(pool, token, alert) do
-    msg = APNS.Message.new
-    |> Map.put(:token, token)
-    |> Map.put(:alert, alert)
-    push(pool, msg)
+    message =
+      APNS.Message.new
+      |> Map.put(:token, token)
+      |> Map.put(:alert, alert)
+
+    push(pool, message)
   end
 
-  def push(pool, %APNS.Message{} = msg) do
+  def push(pool, %APNS.Message{} = message) do
     :poolboy.transaction(pool_name(pool), fn(pid) ->
-      GenServer.cast(pid, msg)
+      GenServer.cast(pid, message)
     end)
   end
 
@@ -38,6 +40,6 @@ defmodule APNS do
   end
 
   def pool_name(name) do
-    "APNS.Pool.#{to_string(name)}" |> String.to_atom
+    String.to_atom("APNS.Pool.#{to_string(name)}")
   end
 end

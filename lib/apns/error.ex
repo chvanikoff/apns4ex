@@ -1,7 +1,7 @@
 defmodule APNS.Error do
   @statuses %{
     0 => "No errors encountered",
-    1 => "Processing",
+    1 => "Processing error",
     2 => "Missing device token",
     3 => "Missing topic",
     4 => "Missing payload",
@@ -19,9 +19,9 @@ defmodule APNS.Error do
     error: nil
   ]
 
-  def new(msg_id, status) do
+  def new(message_id, status) do
     %__MODULE__{
-      message_id: msg_id,
+      message_id: message_id,
       status: status,
       error: @statuses[status]
     }
