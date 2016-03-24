@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.13 (2016-03-23)
+
+* Merged PR #26 with README update
+* Merged PR #27 with a better logging which now includes a message id
+
 ## 0.0.12 (2016-03-10)
 
 * Merged PR #23 which stop a reconnect spam if SSl connect fails
