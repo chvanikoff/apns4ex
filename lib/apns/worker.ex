@@ -47,7 +47,8 @@ defmodule APNS.Worker do
       socket_apple: nil,
       buffer_feedback: "",
       buffer_apple: "",
-      counter: 0
+      counter: 0,
+      apple_connected_time: nil
     }
     send self, :connect_apple
     send self, :connect_feedback
@@ -63,7 +64,7 @@ defmodule APNS.Worker do
     case :ssl.connect(host, port, opts, timeout) do
       {:ok, socket} ->
         Logger.debug "[APNS] connected to #{address}"
-        {:noreply, %{state | socket_apple: socket, counter: 0}}
+        {:noreply, %{state | socket_apple: socket, counter: 0, apple_connected_time: Calendar.DateTime.now_utc}}
       {:error, reason} ->
         Logger.error "[APNS] failed to connect #{address}, reason given: #{inspect reason}"
         :timer.sleep(timeout)
@@ -148,11 +149,19 @@ defmodule APNS.Worker do
         |> state.config.callback_module.error()
         {:reply, :ok, state}
       payload ->
-        send_message(state.socket_apple, msg, payload)
         if (state.counter >= state.config.reconnect_after) do
           Logger.debug "[APNS] #{state.counter} messages sent, reconnecting"
           send self, :connect_apple
         end
+
+        {:ok, sec, _msec, :after} = Calendar.DateTime.diff(Calendar.DateTime.now_utc, state.apple_connected_time)
+        if (sec > state.config.timeout) do
+          Logger.debug "[APNS] socket_apple timeout, reconnecting"
+          send self, :connect_apple
+        end
+
+        send_message(state.socket_apple, msg, payload)
+
         {:reply, :ok, %{state | counter: state.counter + 1}}
     end
   end
