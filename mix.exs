@@ -24,7 +24,8 @@ defmodule APNS.Mixfile do
       :public_key,
       :ssl,
       :poison,
-      :poolboy
+      :poolboy,
+      :calendar
     ],
     mod: {APNS, []}]
   end
@@ -32,7 +33,8 @@ defmodule APNS.Mixfile do
   defp deps do
     [
       {:poison, "~> 1.5"},
-      {:poolboy, "~> 1.5"}
+      {:poolboy, "~> 1.5"},
+      {:calendar, "~> 0.13.2"}
     ]
   end
 
