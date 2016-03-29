@@ -8,8 +8,9 @@ defmodule APNS.Queue do
   end
 
   def messages_after(pid, failed_id) do
-    messages = Agent.get_and_update(pid, fn(messages) -> {messages, []} end)
-    Enum.take_while(messages, fn(message) -> message.id != failed_id end)
+    pid
+    |> Agent.get_and_update(fn(messages) -> {messages, []} end)
+    |> Enum.take_while(fn(message) -> message.id != failed_id end)
   end
 
   def clear(pid) do

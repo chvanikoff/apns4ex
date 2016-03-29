@@ -50,7 +50,7 @@ defmodule APNS.MessageHandler do
 
   def handle_response(state, socket, data, worker_pid \\ self()) do
     case <<state.buffer_apple :: binary, data :: binary>> do
-      <<8 :: 8, status :: 8, message_id :: binary-4, rest :: binary>> ->
+      <<8 :: 8, status :: 8, message_id :: integer-32, rest :: binary>> ->
         APNS.Error.new(message_id, status) |> state.config.callback_module.error()
 
         for message <- APNS.Queue.messages_after(state.queue, message_id) do

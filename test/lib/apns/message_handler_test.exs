@@ -111,62 +111,62 @@ defmodule APNS.MessageHandlerTest do
 
   test "handle_response calls error callback if status byte is 0", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(0, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "No errors encountered" for message "1234")
+    assert output =~ ~s([APNS] Error "No errors encountered" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 1", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(1, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Processing error" for message "1234")
+    assert output =~ ~s([APNS] Error "Processing error" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 2", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(2, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Missing device token" for message "1234")
+    assert output =~ ~s([APNS] Error "Missing device token" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 3", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(3, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Missing topic" for message "1234")
+    assert output =~ ~s([APNS] Error "Missing topic" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 4", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(4, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Missing payload" for message "1234")
+    assert output =~ ~s([APNS] Error "Missing payload" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 5", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(5, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Invalid token size" for message "1234")
+    assert output =~ ~s([APNS] Error "Invalid token size" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 6", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(6, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Invalid topic size" for message "1234")
+    assert output =~ ~s([APNS] Error "Invalid topic size" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 7", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(7, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Invalid payload size" for message "1234")
+    assert output =~ ~s([APNS] Error "Invalid payload size" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 8", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(8, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Invalid token" for message "1234")
+    assert output =~ ~s([APNS] Error "Invalid token" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 10", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(10, queue_pid), "socket", "") end)
-    assert output =~ ~s([APNS] Error "Shutdown" for message "1234")
+    assert output =~ ~s([APNS] Error "Shutdown" for message 1234)
   end
 
   test "handle_response calls error callback if status byte is 255", %{queue_pid: queue_pid} do
     output = capture_log(fn -> MessageHandler.handle_response(response_state(255, queue_pid), "socket", "") end)
-    assert output =~ ~s/[APNS] Error "None (unknown)" for message "1234"/
+    assert output =~ ~s/[APNS] Error "None (unknown)" for message 1234/
   end
 
   test "handle_response retries messages later in queue", %{queue_pid: queue_pid} do
     message1 = %APNS.Message{id: 1}
-    message2 = %APNS.Message{id: "1234"}
+    message2 = %APNS.Message{id: 1234}
     message3 = %APNS.Message{id: 3}
     message4 = %APNS.Message{id: 4}
     Agent.update(queue_pid, fn(_) -> [message4, message3, message2, message1] end)
@@ -174,7 +174,7 @@ defmodule APNS.MessageHandlerTest do
     MessageHandler.handle_response(response_state(8, queue_pid), "socket", "", self())
 
     refute_receive {_, %APNS.Message{id: 1}}
-    refute_receive {_, %APNS.Message{id: "1234"}}
+    refute_receive {_, %APNS.Message{id: 1234}}
     assert_receive {_, %APNS.Message{id: 3}}
     assert_receive {_, %APNS.Message{id: 4}}
   end
@@ -193,9 +193,9 @@ defmodule APNS.MessageHandlerTest do
     data = <<package1 :: binary, package2 :: binary>>
     output = capture_log(fn -> MessageHandler.handle_response(state, "socket", data) end)
 
-    assert output =~ ~s([APNS] Error "Invalid topic size" for message "1234")
-    assert output =~ ~s([APNS] Error "Invalid token" for message "1234")
-    assert output =~ ~s([APNS] Error "Invalid payload size" for message "1234")
+    assert output =~ ~s([APNS] Error "Invalid topic size" for message 1234)
+    assert output =~ ~s([APNS] Error "Invalid token" for message 1234)
+    assert output =~ ~s([APNS] Error "Invalid payload size" for message 1234)
   end
 
   @tag :pending # should we support this case?
@@ -206,8 +206,8 @@ defmodule APNS.MessageHandlerTest do
     data = <<package1 :: binary, package2 :: binary>>
     output = capture_log(fn -> MessageHandler.handle_response(state, "socket", data) end)
 
-    assert output =~ ~s([APNS] Error "Invalid token" for message "1234")
-    assert output =~ ~s([APNS] Error "Invalid payload size" for message "1234")
+    assert output =~ ~s([APNS] Error "Invalid token" for message 1234)
+    assert output =~ ~s([APNS] Error "Invalid payload size" for message 1234)
   end
 
   @tag :pending # should we support this case?
@@ -219,9 +219,9 @@ defmodule APNS.MessageHandlerTest do
     data = <<package1 :: binary, package2 :: binary, package3 :: binary>>
     output = capture_log(fn -> MessageHandler.handle_response(state, "socket", data) end)
 
-    assert output =~ ~s([APNS] Error "Invalid topic size" for message "1234")
-    assert output =~ ~s([APNS] Error "Invalid token" for message "1234")
-    assert output =~ ~s([APNS] Error "Invalid payload size" for message "1234")
+    assert output =~ ~s([APNS] Error "Invalid topic size" for message 1234)
+    assert output =~ ~s([APNS] Error "Invalid token" for message 1234)
+    assert output =~ ~s([APNS] Error "Invalid payload size" for message 1234)
   end
 
   defp response_state(status_code, queue_pid) do
@@ -233,6 +233,6 @@ defmodule APNS.MessageHandlerTest do
   end
 
   defp apple_buffer(status_code) do
-    <<8 :: 8, status_code :: 8, "1234" :: binary>>
+    <<8 :: 8, status_code :: 8, 1234 :: integer-32>>
   end
 end

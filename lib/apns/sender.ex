@@ -8,10 +8,10 @@ defmodule APNS.Sender do
     case result do
       :ok ->
         Queue.add(queue, message)
-        Logger.debug("[APNS] success sent to #{message.token}")
+        Logger.debug("[APNS] success sending #{message.id} to #{message.token}")
       {:error, reason} ->
         Queue.clear(queue)
-        Logger.error("[APNS] error (#{reason}) sending to #{message.token}")
+        Logger.error("[APNS] error (#{reason}) sending #{message.id} to #{message.token}")
     end
 
     result
