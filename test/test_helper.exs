@@ -13,13 +13,11 @@ defmodule APNS.FakeSender do
     {:ok, %{}}
   end
 
-  def send_package(socket, binary_payload, message, queue) do
+  def send_package(socket, binary_payload) do
     Logger.debug [
-      "APNS.FakeSender.send_package/4",
+      "APNS.FakeSender.send_package/2",
       " socket: " <> inspect(socket),
-      " payload: " <> inspect(binary_payload),
-      " message: " <> inspect(message),
-      " queque: " <> inspect(queue)
+      " payload: " <> inspect(binary_payload)
     ]
   end
 
@@ -32,15 +30,28 @@ defmodule APNS.FakeSender do
 end
 
 defmodule APNS.FakeSenderConnectFail do
-  require Logger
-
   def connect_socket(host, port, opts, timeout) do
     APNS.FakeSender.connect_socket(host, port, opts, timeout)
     {:error, {:connection_failed, "#{host}:#{port}"}}
   end
 
-  def send_package(socket, binary_payload, message, queue) do
-    APNS.FakeSender.send_package(socket, binary_payload, message, queue)
+  def send_package(socket, binary_payload) do
+    APNS.FakeSender.send_package(socket, binary_payload)
+  end
+
+  def close(socket) do
+    APNS.FakeSender.close(socket)
+  end
+end
+
+defmodule APNS.FakeSenderSendPackageFail do
+  def connect_socket(host, port, opts, timeout) do
+    APNS.FakeSender.connect_socket(host, port, opts, timeout)
+  end
+
+  def send_package(socket, binary_payload) do
+    APNS.FakeSender.send_package(socket, binary_payload)
+    {:error, "FakeSenderSendPackageFail failed"}
   end
 
   def close(socket) do

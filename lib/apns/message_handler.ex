@@ -37,7 +37,14 @@ defmodule APNS.MessageHandler do
 
       payload ->
         binary_payload = APNS.Package.to_binary(message, payload)
-        sender.send_package(socket, binary_payload, message, queue)
+        case sender.send_package(socket, binary_payload) do
+          :ok ->
+            state = %{state | queue: [message | queue]}
+            Logger.debug("[APNS] success sending #{message.id} to #{message.token}")
+          {:error, reason} ->
+            state = %{state | queue: []}
+            Logger.error("[APNS] error (#{reason}) sending #{message.id} to #{message.token}")
+        end
 
         if state.counter >= state.config.reconnect_after do
           Logger.debug("[APNS] #{state.counter} messages sent, reconnecting")
@@ -53,9 +60,11 @@ defmodule APNS.MessageHandler do
       <<8 :: 8, status :: 8, message_id :: integer-32, rest :: binary>> ->
         APNS.Error.new(message_id, status) |> state.config.callback_module.error()
 
-        for message <- APNS.Queue.messages_after(state.queue, message_id) do
+        for message <- messages_after(state.queue, message_id) do
           GenServer.cast(worker_pid, message)
         end
+
+        state = %{state | queue: []}
 
         case rest do
           "" -> state
@@ -65,5 +74,9 @@ defmodule APNS.MessageHandler do
       buffer ->
         %{state | buffer_apple: buffer}
     end
+  end
+
+  defp messages_after(queue, failed_id) do
+    Enum.take_while(queue, fn(message) -> message.id != failed_id end)
   end
 end

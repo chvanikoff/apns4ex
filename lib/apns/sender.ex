@@ -1,17 +1,14 @@
 defmodule APNS.Sender do
   require Logger
-  alias APNS.Queue
 
-  def send_package(socket, packet, message, queue) do
+  def send_package(socket, packet) do
     result = :ssl.send(socket, [packet])
 
     case result do
       :ok ->
-        Queue.add(queue, message)
-        Logger.debug("[APNS] success sending #{message.id} to #{message.token}")
+        Logger.debug("[APNS] success sending ssl package")
       {:error, reason} ->
-        Queue.clear(queue)
-        Logger.error("[APNS] error (#{reason}) sending #{message.id} to #{message.token}")
+        Logger.error("[APNS] error (#{reason}) sending ssl package")
     end
 
     result
@@ -30,10 +27,7 @@ defmodule APNS.Sender do
     end
   end
 
-  def close(nil) do
-    nil
-  end
-
+  def close(nil), do: nil
   def close(socket) do
     :ssl.close(socket)
   end
