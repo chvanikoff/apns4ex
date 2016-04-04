@@ -18,10 +18,11 @@ defmodule APNS.MessageHandlerTest do
         apple_port: 2195,
         timeout: 10
       },
+      ssl_opts: %{},
       socket_apple: "socket",
       queue: [],
       counter: 0,
-      ssl_opts: %{}
+      pool: :test
     }
     token = String.duplicate("0", 64)
     message =
@@ -89,21 +90,26 @@ defmodule APNS.MessageHandlerTest do
     assert output =~ ~s(to #{token})
   end
 
-  test "push clears queue on ssl error", %{state: state, message: message} do
-    state = %{state | queue: [1, 2, 3]}
-    assert %{queue: []} = MessageHandler.push(message, state, APNS.FakeSenderSendPackageFail)
+  test "push stops worker on connecton error", %{state: state, message: message} do
+    assert {:error, "FakeSenderSendPackageFail failed", %{}} = MessageHandler.push(message, state, APNS.FakeSenderSendPackageFail, FakeRetrier)
+  end
+
+  test "push puts the failed message back on the queque for re-sending", %{state: state, message: message} do
+    output = capture_log(fn -> MessageHandler.push(message, state, APNS.FakeSenderSendPackageFail, FakeRetrier) end)
+    assert output =~ ~s(APNS.FakeRetrier.push/2 pool: :test)
+    assert output =~ ~s(id: 23)
   end
 
   test "push logs error on ssl error", %{state: state, message: message} do
-    output = capture_log(fn -> MessageHandler.push(message, state, APNS.FakeSenderSendPackageFail) end)
+    output = capture_log(fn -> MessageHandler.push(message, state, APNS.FakeSenderSendPackageFail, FakeRetrier) end)
     assert output =~ ~s(APNS.FakeSender.send_package/2)
     assert output =~ ~s/[APNS] error (FakeSenderSendPackageFail failed) sending #{message.id} to #{message.token}/
   end
 
   test "push reconnects after configured amount of pushes", %{state: state, message: message} do
-    state = MessageHandler.push(message, state, FakeSender)
-    state = MessageHandler.push(message, state, FakeSender)
-    state = MessageHandler.push(message, state, FakeSender)
+    {:ok, state} = MessageHandler.push(message, state, FakeSender)
+    {:ok, state} = MessageHandler.push(message, state, FakeSender)
+    {:ok, state} = MessageHandler.push(message, state, FakeSender)
     output = capture_log(fn -> MessageHandler.push(message, state, FakeSender) end)
     assert output =~ ~s([APNS] 3 messages sent, reconnecting)
     assert output =~ ~s(APNS.FakeSender.close/)
@@ -111,8 +117,8 @@ defmodule APNS.MessageHandlerTest do
   end
 
   test "push counts number of pushes", %{state: state, message: message} do
-    state = MessageHandler.push(message, state, FakeSender)
-    state = MessageHandler.push(message, state, FakeSender)
+    {:ok, state} = MessageHandler.push(message, state, FakeSender)
+    {:ok, state} = MessageHandler.push(message, state, FakeSender)
     assert state.counter == 2
   end
 
@@ -178,12 +184,21 @@ defmodule APNS.MessageHandlerTest do
     message4 = %APNS.Message{id: 4}
     queue = [message4, message3, message2, message1]
 
-    assert %{queue: []} = MessageHandler.handle_response(response_state(8, queue), "socket", "", self())
+    output = capture_log(fn -> MessageHandler.handle_response(response_state(8, queue), "socket", "", FakeRetrier) end)
+    assert output =~ ~s(APNS.FakeRetrier.push/2 pool: :test)
+    assert output =~ ~s(id: 4)
+    assert output =~ ~s(id: 3)
+    refute output =~ ~s(id: 1234)
+    refute output =~ ~s(id: 1)
+  end
 
-    refute_receive {_, %APNS.Message{id: 1}}
-    refute_receive {_, %APNS.Message{id: 1234}}
-    assert_receive {_, %APNS.Message{id: 3}}
-    assert_receive {_, %APNS.Message{id: 4}}
+  test "handle_response clears queque on error" do
+    message1 = %APNS.Message{id: 1}
+    message2 = %APNS.Message{id: 1234}
+    message3 = %APNS.Message{id: 3}
+    queue = [message3, message2, message1]
+
+    assert %{queue: []} = MessageHandler.handle_response(response_state(8, queue), "socket", "", FakeRetrier)
   end
 
   test "handle_response returns state if rest is blank" do
@@ -235,7 +250,8 @@ defmodule APNS.MessageHandlerTest do
     %{
       buffer_apple: apple_buffer(status_code),
       config: %{callback_module: APNS.Callback},
-      queue: queue
+      queue: queue,
+      pool: :test
     }
   end
 

@@ -1,3 +1,17 @@
+defmodule FakeRetrier do
+  require Logger
+
+  def push(pool, message) do
+    Logger.debug [
+      "APNS.FakeRetrier.push/2",
+      " pool: " <> inspect(pool),
+      " message: " <> inspect(message)
+    ]
+
+    {:ok, %{}}
+  end
+end
+
 defmodule APNS.FakeSender do
   require Logger
 

@@ -12,7 +12,7 @@ defmodule APNS do
 
   def push(pool, %APNS.Message{} = message) do
     :poolboy.transaction(pool_name(pool), fn(pid) ->
-      GenServer.cast(pid, message)
+      APNS.Worker.push(pid, message)
     end)
   end
 
@@ -34,6 +34,7 @@ defmodule APNS do
       max_overflow: conf[:pool_max_overflow],
       strategy: :fifo
     ]
+    conf = Keyword.put(conf, :pool, name)
     child_spec = :poolboy.child_spec(pool_name(name), pool_args, conf)
 
     Supervisor.start_child(APNS.Supervisor, child_spec)

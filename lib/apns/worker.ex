@@ -6,6 +6,10 @@ defmodule APNS.Worker do
     GenServer.start_link(__MODULE__, pool_conf, [])
   end
 
+  def push(pid, message) do
+    GenServer.call(pid, message)
+  end
+
   def init(pool_conf) do
     state = APNS.State.get(pool_conf)
     send(self, :connect_apple)
@@ -51,8 +55,14 @@ defmodule APNS.Worker do
     {:noreply, APNS.FeedbackHandler.handle_response(state, socket, data)}
   end
 
-  def handle_cast(message, state) do
-    {:noreply, APNS.MessageHandler.push(message, state)}
+  def handle_call(message, _from, state) do
+    case APNS.MessageHandler.push(message, state) do
+      {:ok, state} ->
+        {:reply, :ok, state}
+      {:error, reason, state} ->
+        Logger.info("[APNS] stopping worker #{inspect(self())} due to conection error #{inspect(reason)}")
+        {:stop, :normal, state}
+    end
   end
 
   defp sleep(seconds) do

@@ -16,14 +16,14 @@ defmodule APNS.MessageHandler do
     end
   end
 
-  def push(_message, _state, sender \\ APNS.Sender)
+  def push(_message, _state, sender \\ APNS.Sender, retrier \\ APNS)
 
-  def push(%APNS.Message{token: token} = message, state, _sender) when byte_size(token) != 64 do
+  def push(%APNS.Message{token: token} = message, state, _sender, _retrier) when byte_size(token) != 64 do
     APNS.Error.new(message.id, 5) |> state.config.callback_module.error(token)
-    state
+    {:ok, state}
   end
 
-  def push(%APNS.Message{} = message, %{config: config, socket_apple: socket, queue: queue} = state, sender) do
+  def push(%APNS.Message{} = message, %{config: config, socket_apple: socket, queue: queue} = state, sender, retrier) do
     limit = case message.support_old_ios do
       nil -> config.payload_limit
       true -> @payload_max_old
@@ -39,29 +39,30 @@ defmodule APNS.MessageHandler do
         binary_payload = APNS.Package.to_binary(message, payload)
         case sender.send_package(socket, binary_payload) do
           :ok ->
-            state = %{state | queue: [message | queue]}
             Logger.debug("[APNS] success sending #{message.id} to #{message.token}")
+
+            if state.counter >= state.config.reconnect_after do
+              Logger.debug("[APNS] #{state.counter} messages sent, reconnecting")
+              connect(state, sender)
+            end
+
+            {:ok, %{state | queue: [message | queue], counter: state.counter + 1}}
+
           {:error, reason} ->
-            state = %{state | queue: []}
-            Logger.error("[APNS] error (#{reason}) sending #{message.id} to #{message.token}")
+            Logger.warn("[APNS] error (#{reason}) sending #{message.id} to #{message.token} retrying…")
+            retrier.push(state.pool, message)
+            {:error, reason, %{state | queue: [], counter: 0}}
         end
-
-        if state.counter >= state.config.reconnect_after do
-          Logger.debug("[APNS] #{state.counter} messages sent, reconnecting")
-          connect(state, sender)
-        end
-
-        %{state | counter: state.counter + 1}
     end
   end
 
-  def handle_response(state, socket, data, worker_pid \\ self()) do
+  def handle_response(state, socket, data, retrier \\ APNS) do
     case <<state.buffer_apple :: binary, data :: binary>> do
       <<8 :: 8, status :: 8, message_id :: integer-32, rest :: binary>> ->
         APNS.Error.new(message_id, status) |> state.config.callback_module.error()
 
         for message <- messages_after(state.queue, message_id) do
-          GenServer.cast(worker_pid, message)
+          retrier.push(state.pool, message)
         end
 
         state = %{state | queue: []}

@@ -6,11 +6,12 @@ defmodule APNS.StateTest do
   @payload_min_size 38
 
   test "get adds merged application defaults with APNS.Configuration defaults and Application level config" do
-    configuration = State.get([])
+    configuration = State.get([pool: :test])
 
     assert configuration.buffer_apple == ""
     assert configuration.buffer_feedback == ""
     assert configuration.counter == 0
+    assert configuration.pool == :test
     refute configuration.queue == nil
 
     assert configuration.config.timeout == 60
@@ -33,9 +34,11 @@ defmodule APNS.StateTest do
       mode: :text,
       certfile: "my cert file",
       cert_password: "my cart password",
-      keyfile: "my keyfile"
+      keyfile: "my keyfile",
+      pool: :test
     )
 
+    assert configuration.pool == :test
     assert configuration.config.timeout == 12
     assert configuration.config.feedback_interval == 3312
     assert configuration.config.reconnect_after == 30

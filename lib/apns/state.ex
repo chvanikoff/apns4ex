@@ -3,6 +3,7 @@ defmodule APNS.State do
     %{
       config: APNS.Configuration.get(options),
       ssl_opts: APNS.SslConfiguration.get(options),
+      pool: Keyword.fetch!(options, :pool),
       socket_feedback: nil,
       socket_apple: nil,
       buffer_feedback: "",
