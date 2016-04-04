@@ -19,7 +19,7 @@ defmodule APNS.MessageHandler do
   def push(_message, _state, sender \\ APNS.Sender)
 
   def push(%APNS.Message{token: token} = message, state, _sender) when byte_size(token) != 64 do
-    APNS.Error.new(message.id, 5) |> state.config.callback_module.error()
+    APNS.Error.new(message.id, 5) |> state.config.callback_module.error(token)
     state
   end
 

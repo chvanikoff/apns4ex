@@ -63,9 +63,10 @@ defmodule APNS.MessageHandlerTest do
   end
 
   test "push calls error callback if token is invalid size", %{state: state, message: message} do
-    message = Map.put(message, :token, String.duplicate("0", 63))
+    token = String.duplicate("0", 63)
+    message = Map.put(message, :token, token)
     output = capture_log(fn -> MessageHandler.push(message, state) end)
-    assert output =~ ~s([APNS] Error "Invalid token size" for message 23)
+    assert output =~ ~s([APNS] Error "Invalid token size" for message 23 to #{token})
   end
 
   test "push calls error callback if payload is too big", %{state: state, message: message} do
