@@ -93,16 +93,18 @@ defmodule APNS.MessageHandlerTest do
     assert {:error, "FakeSenderSendPackageFail failed", %{}} = MessageHandler.push(message, state, APNS.FakeSenderSendPackageFail, FakeRetrier)
   end
 
-  test "push puts the failed message back on the queque for re-sending", %{state: state, message: message} do
+  test "push puts the failed message back on the queue for re-sending", %{state: state, message: message} do
     output = capture_log(fn -> MessageHandler.push(message, state, APNS.FakeSenderSendPackageFail, FakeRetrier) end)
+    assert output =~ ~s/[APNS] error (FakeSenderSendPackageFail failed) sending 23 to #{message.token} retrying…/
     assert output =~ ~s(APNS.FakeRetrier.push/2 pool: :test)
     assert output =~ ~s(id: 23)
   end
 
-  test "push logs error on ssl error", %{state: state, message: message} do
+  test "push don't put messages that have failed more than 10 times back for re-sending", %{state: state, message: message} do
+    message = Map.put(message, :retry_count, 10)
     output = capture_log(fn -> MessageHandler.push(message, state, APNS.FakeSenderSendPackageFail, FakeRetrier) end)
-    assert output =~ ~s(APNS.FakeSender.send_package/2)
-    assert output =~ ~s/[APNS] error (FakeSenderSendPackageFail failed) sending #{message.id} to #{message.token}/
+    assert output =~ ~s/[APNS] 10th error (FakeSenderSendPackageFail failed) sending 23 to #{message.token} message will not be delivered/
+    refute output =~ ~s(APNS.FakeRetrier.push/2 pool: :test)
   end
 
   test "push reconnects after configured amount of pushes", %{state: state, message: message} do

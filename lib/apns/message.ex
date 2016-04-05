@@ -11,7 +11,8 @@ defmodule APNS.Message do
     sound: "default",
     priority: 10,
     extra: [],
-    support_old_ios: nil
+    support_old_ios: nil,
+    retry_count: 0
   ]
 
   def new do

@@ -49,8 +49,13 @@ defmodule APNS.MessageHandler do
             {:ok, %{state | queue: [message | queue], counter: state.counter + 1}}
 
           {:error, reason} ->
-            Logger.warn("[APNS] error (#{reason}) sending #{message.id} to #{message.token} retrying…")
-            retrier.push(state.pool, message)
+            if message.retry_count >= 10 do
+              Logger.error("[APNS] #{message.retry_count}th error (#{reason}) sending #{message.id} to #{message.token} message will not be delivered")
+            else
+              Logger.warn("[APNS] error (#{reason}) sending #{message.id} to #{message.token} retrying…")
+              retrier.push(state.pool, Map.put(message, :retry_count, message.retry_count + 1))
+            end
+
             {:error, reason, %{state | queue: [], counter: 0}}
         end
     end
