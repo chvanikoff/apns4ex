@@ -12,6 +12,7 @@ defmodule APNS.ConfigurationTest do
     assert configuration.support_old_ios == true
     assert configuration.callback_module == APNS.Callback
     assert configuration.payload_limit == 256
+    assert configuration.expiry == 60
   end
 
   test "get defaults can be overriden" do
@@ -19,13 +20,15 @@ defmodule APNS.ConfigurationTest do
       timeout: 9,
       feedback_interval: 7,
       reconnect_after: 3,
-      callback_module: __MODULE__
+      callback_module: __MODULE__,
+      expiry: 12
     ])
 
     assert configuration.timeout == 9
     assert configuration.feedback_interval == 7
     assert configuration.reconnect_after == 3
     assert configuration.callback_module == __MODULE__
+    assert configuration.expiry == 12
   end
 
   test "get sets Apple addresses to sandbox when given env :dev" do

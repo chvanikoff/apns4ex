@@ -32,6 +32,7 @@ config :apns,
   feedback_interval:  1200,
   reconnect_after:    1000,
   support_old_ios:    true,
+  expiry:    60,
   # Here are pools configs. Any value from "global" config can be overwritten in any single pool config
   pools: [
     # app1_dev_pool is the pool_name
@@ -65,6 +66,7 @@ config :apns,
 | feedback_interval | 1200          | The app will check Apple feedback server every `feedback_interval` seconds                                                                                                                   |
 | reconnect_after   | 1000          | Will reconnect after 1000 notifications sent                                                                                                                                                 |
 | support_old_ios   | true          | Push notifications are limited by 256 bytes (2kb if false), this option can be changed per message individually                                                                              |
+| expiry            | 60            | Seconds Apple will re-try to deliver the push notification                                                                                                                                   |
 | pools             | []            | List of pools to start                                                                                                                                                                       |
 
 ### Pool keys
@@ -105,7 +107,7 @@ You can define callback handler module via config param `callback_module`, the m
 ```elixir
 defstruct [
   id: nil,
-  expiry: 86400000,
+  expiry: 60,
   token: "",
   content_available: nil,
   alert: "",

@@ -9,7 +9,8 @@ defmodule APNS.Configuration do
     apple_host: "gateway.sandbox.push.apple.com",
     apple_port: 2195,
     feedback_host: "feedback.sandbox.push.apple.com",
-    feedback_port: 2196
+    feedback_port: 2196,
+    expiry: 60
   ]
 
   @payload_max_old 256

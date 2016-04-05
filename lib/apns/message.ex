@@ -2,7 +2,7 @@ defmodule APNS.Message do
   defstruct [
     id: nil,
     category: nil,
-    expiry: 86400000,
+    expiry: 60,
     token: "",
     content_available: nil,
     alert: "",

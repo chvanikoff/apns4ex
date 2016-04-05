@@ -1,6 +1,7 @@
 defmodule APNS.Package do
-  def to_binary(message, payload) do
+  def to_binary(message, payload, now \\ :os.system_time(:seconds)) do
     token_bin = message.token |> Base.decode16!(case: :mixed)
+    expiry = now + message.expiry
 
     frame = <<
       1                  :: 8,
@@ -14,7 +15,7 @@ defmodule APNS.Package do
       message.id         :: 32,
       4                  :: 8,
       4                  :: 16,
-      message.expiry     :: 32,
+      expiry             :: 32,
       5                  :: 8,
       1                  :: 16,
       message.priority   :: 8
