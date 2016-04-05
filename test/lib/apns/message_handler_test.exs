@@ -26,10 +26,9 @@ defmodule APNS.MessageHandlerTest do
     }
     token = String.duplicate("0", 64)
     message =
-      %APNS.Message{}
+      APNS.Message.new(23)
       |> Map.put(:token, token)
       |> Map.put(:alert, "Lorem ipsum dolor sit amet, consectetur adipisicing elit")
-      |> Map.put(:id, 23)
 
     {:ok, %{
       apple_success_buffer: <<0 :: 8, 0 :: 8, "1337" :: binary>>,
@@ -178,10 +177,10 @@ defmodule APNS.MessageHandlerTest do
   end
 
   test "handle_response retries messages later in queue" do
-    message1 = %APNS.Message{id: 1}
-    message2 = %APNS.Message{id: 1234}
-    message3 = %APNS.Message{id: 3}
-    message4 = %APNS.Message{id: 4}
+    message1 = APNS.Message.new(1)
+    message2 = APNS.Message.new(1234)
+    message3 = APNS.Message.new(3)
+    message4 = APNS.Message.new(4)
     queue = [message4, message3, message2, message1]
 
     output = capture_log(fn -> MessageHandler.handle_response(response_state(8, queue), "socket", "", FakeRetrier) end)
@@ -193,9 +192,9 @@ defmodule APNS.MessageHandlerTest do
   end
 
   test "handle_response clears queque on error" do
-    message1 = %APNS.Message{id: 1}
-    message2 = %APNS.Message{id: 1234}
-    message3 = %APNS.Message{id: 3}
+    message1 = APNS.Message.new(1)
+    message2 = APNS.Message.new(1234)
+    message3 = APNS.Message.new(3)
     queue = [message3, message2, message1]
 
     assert %{queue: []} = MessageHandler.handle_response(response_state(8, queue), "socket", "", FakeRetrier)

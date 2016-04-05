@@ -66,8 +66,10 @@ config :apns,
 | feedback_interval | 1200          | The app will check Apple feedback server every `feedback_interval` seconds                                                                                                                   |
 | reconnect_after   | 1000          | Will reconnect after 1000 notifications sent                                                                                                                                                 |
 | support_old_ios   | true          | Push notifications are limited by 256 bytes (2kb if false), this option can be changed per message individually                                                                              |
-| expiry            | 60            | Seconds Apple will re-try to deliver the push notification                                                                                                                                   |
+| expiry            | 60            | Seconds Apple will re-try to deliver the push notification*                                                                                                                                  |
 | pools             | []            | List of pools to start                                                                                                                                                                       |
+
+\* It should be noted that Apple will always try to deliver the message at least once. If it takes longer to send the message to Apple than the expiry offset it will still be delivered.
 
 ### Pool keys
 

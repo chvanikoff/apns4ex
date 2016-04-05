@@ -3,6 +3,7 @@ defmodule APNS.Message do
     id: nil,
     category: nil,
     expiry: 60,
+    generated_at: nil,
     token: "",
     content_available: nil,
     alert: "",
@@ -17,8 +18,11 @@ defmodule APNS.Message do
     make_ref() |> :erlang.phash2() |> new()
   end
 
-  def new(id) do
-    %__MODULE__{id: id}
+  def new(id) when is_number(id) do
+    %__MODULE__{
+      id: id,
+      generated_at: :os.system_time(:seconds)
+    }
   end
 
   defmodule Loc do
