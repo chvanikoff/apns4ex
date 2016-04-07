@@ -42,7 +42,7 @@ defmodule APNS.FeedbackWorker do
     {:connect, :reconnect, %{state | socket_feedback: nil}}
   end
 
-  def handle_info({:ssl_closed, socket}, %{socket_feedback: socket, config: %{feedback_interval: interval}} = state) do
+  def handle_info({:ssl_closed, socket}, %{socket_feedback: socket} = state) do
     {:connect, :reconnect, %{state | socket_feedback: nil}}
   end
 

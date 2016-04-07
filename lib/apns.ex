@@ -12,7 +12,7 @@ defmodule APNS do
 
   def push(pool, %APNS.Message{} = message) do
     :poolboy.transaction(pool_name(pool), fn(pid) ->
-      APNS.MessageWorker.push(pid, message)
+      APNS.MessageWorker.send(pid, message)
     end)
   end
 
