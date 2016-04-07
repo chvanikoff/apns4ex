@@ -61,7 +61,7 @@ defmodule APNS.Worker do
         {:reply, :ok, state}
       {:error, reason, state} ->
         Logger.info("[APNS] stopping worker #{inspect(self())} due to conection error #{inspect(reason)}")
-        {:stop, :normal, state}
+        {:stop, :normal, :ok, state}
     end
   end
 
