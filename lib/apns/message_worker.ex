@@ -1,4 +1,4 @@
-defmodule APNS.Worker do
+defmodule APNS.MessageWorker do
   use Connection
   require Logger
 

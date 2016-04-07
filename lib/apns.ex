@@ -12,7 +12,7 @@ defmodule APNS do
 
   def push(pool, %APNS.Message{} = message) do
     :poolboy.transaction(pool_name(pool), fn(pid) ->
-      APNS.Worker.push(pid, message)
+      APNS.MessageWorker.push(pid, message)
     end)
   end
 
@@ -29,7 +29,7 @@ defmodule APNS do
   def connect_pool(name, conf) do
     pool_args = [
       name: {:local, pool_name(name)},
-      worker_module: APNS.Worker,
+      worker_module: APNS.MessageWorker,
       size: conf[:pool_size],
       max_overflow: conf[:pool_max_overflow],
       strategy: :fifo
