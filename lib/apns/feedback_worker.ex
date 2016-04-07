@@ -13,36 +13,57 @@ defmodule APNS.FeedbackWorker do
 
   # -- server
 
-  def connect(:reconnect, %{config: %{feedback_interval: interval}} = state) do
+  def connect(_, _state, sender \\ APNS.Sender)
+
+  def connect(:reconnect, %{config: %{feedback_interval: interval}} = state, _sender) do
+    Logger.info("[APNS] closed connection, reconnecting in #{interval}s")
     {:backoff, interval * 1000, state}
   end
 
-  def connect(_, state) do
-    APNS.FeedbackHandler.connect(state)
+  def connect(_, %{config: config, ssl_opts: opts} = state, sender) do
+    host = to_char_list(config.feedback_host)
+    port = config.feedback_port
+    opts = Keyword.delete(opts, :reuse_sessions)
+
+    case sender.connect_socket(host, port, opts, config.timeout) do
+      {:ok, socket} ->
+        Logger.info("[APNS] successfully opened connection to feedback service")
+        {:ok, %{state | socket_feedback: socket}}
+      {:error, reason} ->
+        Logger.info("[APNS] error (#{inspect(reason)}) opening connection to feedback service")
+        {:backoff, 1000, state}
+    end
   end
 
-  def disconnect(info, %{socket_feedback: socket} = state) do
-    :ok = :ssl.close(socket)
-
-    case info do
-      {:close, from} ->
-        Connection.reply(from, :ok)
-      {:error, :closed} ->
-        Logger.warn("[APNS] Connection closed")
-      {:error, reason} ->
-        reason = :inet.format_error(reason)
-        Logger.warn("[APNS] Connection error: #{inspect(reason)}")
-    end
+  def disconnect({type, reason}, %{socket_feedback: socket} = state, sender \\ APNS.Sender) do
+    :ok = sender.close(socket)
+    Logger.error("Connection #{inspect(type)}: #{inspect(reason)}")
 
     {:connect, :reconnect, %{state | socket_feedback: nil}}
   end
 
   def handle_info({:ssl_closed, socket}, %{socket_feedback: socket, config: %{feedback_interval: interval}} = state) do
-    Logger.info("[APNS] closed connection, reconnecting in #{interval}s")
     {:connect, :reconnect, %{state | socket_feedback: nil}}
   end
 
   def handle_info({:ssl, socket, data}, %{socket_feedback: socket} = state) do
-    {:noreply, APNS.FeedbackHandler.handle_response(state, socket, data)}
+    {:noreply, handle_response(state, socket, data)}
+  end
+
+  defp handle_response(state, socket, data) do
+    case <<state.buffer_feedback :: binary, data :: binary>> do
+      <<time :: 32, length :: 16, token :: size(length)-binary, rest :: binary>> ->
+        %APNS.Feedback{time: time, token: Base.encode16(token)}
+        |> state.config.callback_module.feedback()
+        state = %{state | buffer_feedback: ""}
+
+        case rest do
+          "" -> state
+          _ -> handle_response(state, socket, rest)
+        end
+
+      buffer ->
+        %{state | buffer_feedback: buffer}
+    end
   end
 end

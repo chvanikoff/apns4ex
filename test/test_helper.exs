@@ -1,4 +1,4 @@
-defmodule FakeRetrier do
+defmodule APNS.FakeRetrier do
   require Logger
 
   def push(pool, message) do

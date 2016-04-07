@@ -3,6 +3,7 @@ defmodule APNS.MessageHandlerTest do
 
   alias APNS.MessageHandler
   alias APNS.FakeSender
+  alias APNS.FakeRetrier
 
   import ExUnit.CaptureLog
 
