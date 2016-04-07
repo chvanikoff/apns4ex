@@ -82,12 +82,6 @@ defmodule APNS.MessageWorker do
         case sender.send_package(socket, binary_payload) do
           :ok ->
             Logger.debug("[APNS] success sending #{message.id} to #{message.token}")
-
-            if state.counter >= state.config.reconnect_after do
-              Logger.debug("[APNS] #{state.counter} messages sent, reconnecting")
-              connect(:reconnect, state, sender) # use Connection API?
-            end
-
             {:ok, %{state | queue: [message | queue], counter: state.counter + 1}}
 
           {:error, reason} ->

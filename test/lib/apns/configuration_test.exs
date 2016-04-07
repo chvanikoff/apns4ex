@@ -8,7 +8,6 @@ defmodule APNS.ConfigurationTest do
 
     assert configuration.timeout == 60
     assert configuration.feedback_interval == 1200
-    assert configuration.reconnect_after == 700
     assert configuration.support_old_ios == true
     assert configuration.callback_module == APNS.Callback
     assert configuration.payload_limit == 256
@@ -19,14 +18,12 @@ defmodule APNS.ConfigurationTest do
     configuration = Configuration.get([
       timeout: 9,
       feedback_interval: 7,
-      reconnect_after: 3,
       callback_module: __MODULE__,
       expiry: 12
     ])
 
     assert configuration.timeout == 9
     assert configuration.feedback_interval == 7
-    assert configuration.reconnect_after == 3
     assert configuration.callback_module == __MODULE__
     assert configuration.expiry == 12
   end

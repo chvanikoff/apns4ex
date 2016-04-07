@@ -16,7 +16,6 @@ defmodule APNS.StateTest do
 
     assert configuration.config.timeout == 60
     assert configuration.config.feedback_interval == 1200
-    assert configuration.config.reconnect_after == 700
     assert configuration.config.support_old_ios == true
     assert configuration.config.callback_module == APNS.Callback
     assert configuration.config.payload_limit == 256
@@ -27,7 +26,6 @@ defmodule APNS.StateTest do
     configuration = State.get(
       timeout: 12,
       feedback_interval: 3312,
-      reconnect_after: 30,
       callback_module: __MODULE__,
       support_old_ios: false,
       reuse_sessions: true,
@@ -41,7 +39,6 @@ defmodule APNS.StateTest do
     assert configuration.pool == :test
     assert configuration.config.timeout == 12
     assert configuration.config.feedback_interval == 3312
-    assert configuration.config.reconnect_after == 30
     assert configuration.config.support_old_ios == false
     assert configuration.config.callback_module == __MODULE__
     assert configuration.config.payload_limit == 2048

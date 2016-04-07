@@ -14,8 +14,7 @@ defmodule APNS.MessageWorkerTest do
       timeout: 10,
       apple_host: "host.apple",
       callback_module: APNS.Callback,
-      payload_limit: 256,
-      reconnect_after: 3
+      payload_limit: 256
     }
     state = %{
       config: config,
@@ -133,15 +132,6 @@ defmodule APNS.MessageWorkerTest do
     end)
     assert output =~ ~s/[APNS] 10th error (FakeSenderSendPackageFail failed) sending 23 to #{message.token} message will not be delivered/
     refute output =~ ~s(APNS.FakeRetrier.send/2 pool: :test)
-  end
-
-  test "handle_call :send reconnects after configured amount of pushes", %{state: state, message: message} do
-    {:reply, :ok, state} = MessageWorker.handle_call({:send, message}, :from, state, FakeSender, FakeRetrier)
-    {:reply, :ok, state} = MessageWorker.handle_call({:send, message}, :from, state, FakeSender, FakeRetrier)
-    {:reply, :ok, state} = MessageWorker.handle_call({:send, message}, :from, state, FakeSender, FakeRetrier)
-    output = capture_log(fn -> MessageWorker.handle_call({:send, message}, :from, state, FakeSender, FakeRetrier) end)
-    assert output =~ ~s([APNS] 3 messages sent, reconnecting)
-    assert output =~ ~s(APNS.FakeSender.connect_socket)
   end
 
   test "handle_call :send counts number of pushes", %{state: state, message: message} do

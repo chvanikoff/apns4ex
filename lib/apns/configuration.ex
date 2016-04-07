@@ -2,7 +2,6 @@ defmodule APNS.Configuration do
   defstruct [
     timeout: 30,
     feedback_interval: 1200,
-    reconnect_after: 1100,
     callback_module: APNS.Callback,
     support_old_ios: true,
     payload_limit: 256,
