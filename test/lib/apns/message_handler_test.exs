@@ -40,7 +40,6 @@ defmodule APNS.MessageHandlerTest do
 
   test "connect calls close before connecting", %{state: state} do
     output = capture_log(fn -> MessageHandler.connect(state, FakeSender) end)
-    assert output =~ ~s(APNS.FakeSender.close)
     assert output =~ ~s(APNS.FakeSender.connect_socket)
   end
 
@@ -59,7 +58,7 @@ defmodule APNS.MessageHandlerTest do
 
   test "connect returns error if connection failed", %{state: state} do
     result = MessageHandler.connect(state, APNS.FakeSenderConnectFail)
-    assert result == {:error, {:connection_failed, "host.apple:2195"}}
+    assert result == {:backoff, 1000, state}
   end
 
   test "push calls error callback if token is invalid size", %{state: state, message: message} do
@@ -113,7 +112,6 @@ defmodule APNS.MessageHandlerTest do
     {:ok, state} = MessageHandler.push(message, state, FakeSender)
     output = capture_log(fn -> MessageHandler.push(message, state, FakeSender) end)
     assert output =~ ~s([APNS] 3 messages sent, reconnecting)
-    assert output =~ ~s(APNS.FakeSender.close/)
     assert output =~ ~s(APNS.FakeSender.connect_socket)
   end
 

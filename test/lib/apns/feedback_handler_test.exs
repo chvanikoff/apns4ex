@@ -47,7 +47,7 @@ defmodule APNS.FeedbackHandlerTest do
 
   test "connect returns error if connection failed", %{state: state} do
     result = FeedbackHandler.connect(state, APNS.FakeSenderConnectFail)
-    assert result == {:error, {:connection_failed, "feedback.apple:2196"}}
+    assert result == {:backoff, 1000, state}
   end
 
   test "handle_response calls callback with token", %{state: state, token: token} do

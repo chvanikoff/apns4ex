@@ -6,13 +6,12 @@ defmodule APNS.MessageHandler do
   @invalid_payload_size_code 7
 
   def connect(%{config: config, ssl_opts: opts} = state, sender \\ APNS.Sender) do
-    sender.close(state.socket_apple)
     host = to_char_list(config.apple_host)
     port = config.apple_port
 
     case sender.connect_socket(host, port, opts, config.timeout) do
       {:ok, socket} -> {:ok, %{state | socket_apple: socket, counter: 0}}
-      {:error, reason} -> {:error, reason}
+      {:error, _} -> {:backoff, 1000, state}
     end
   end
 

@@ -8,8 +8,12 @@ defmodule APNS.FeedbackHandler do
     opts = Keyword.delete(opts, :reuse_sessions)
 
     case sender.connect_socket(host, port, opts, config.timeout) do
-      {:ok, socket} -> {:ok, %{state | socket_feedback: socket}}
-      {:error, reason} -> {:error, reason}
+      {:ok, socket} ->
+        Logger.info("[APNS] successfully opened connection to feedback service")
+        {:ok, %{state | socket_feedback: socket}}
+      {:error, reason} ->
+        Logger.info("[APNS] error (#{inspect(reason)}) opening connection to feedback service")
+        {:backoff, 1000, state}
     end
   end
 

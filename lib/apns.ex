@@ -38,9 +38,16 @@ defmodule APNS do
     child_spec = :poolboy.child_spec(pool_name(name), pool_args, conf)
 
     Supervisor.start_child(APNS.Supervisor, child_spec)
+
+    feedback_worker = Supervisor.Spec.worker(APNS.FeedbackWorker, [conf], id: worker_name(:feedback, name))
+    Supervisor.start_child(APNS.Supervisor, feedback_worker)
   end
 
-  def pool_name(name) do
+  defp pool_name(name) do
     String.to_atom("APNS.Pool.#{to_string(name)}")
+  end
+
+  defp worker_name(type, pool) do
+    String.to_atom("#{type}_worker_#{pool_name(pool)}")
   end
 end
