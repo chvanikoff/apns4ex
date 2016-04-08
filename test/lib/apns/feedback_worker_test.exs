@@ -2,6 +2,7 @@ defmodule APNS.FeedbackWorkerTest do
   use ExUnit.Case
 
   import ExUnit.CaptureLog
+  import APNS.TestHelper
 
   alias APNS.FeedbackWorker
   alias APNS.FakeSender
@@ -33,7 +34,7 @@ defmodule APNS.FeedbackWorkerTest do
       :timer.sleep 2000
     end)
 
-    assert output =~ ~s([APNS] successfully opened connection to feedback service)
+    assert_log output, "successfully opened connection to feedback service"
   end
 
   test "connect backoffs when receiving :reconnect", %{state: state} do
@@ -78,7 +79,7 @@ defmodule APNS.FeedbackWorkerTest do
     state = Map.put(state, :buffer_feedback, feedback_frame(token))
 
     output = capture_log(fn -> FeedbackWorker.handle_info({:ssl, state.socket_feedback, ""}, state) end)
-    assert output =~ ~s("[APNS] Feedback received for token #{String.upcase(token)})
+    assert_log output, "feedback received for token #{String.upcase(token)}"
   end
 
   test "handle_response iterates", %{state: state} do
@@ -90,9 +91,9 @@ defmodule APNS.FeedbackWorkerTest do
     state = Map.put(state, :buffer_feedback, buffer)
 
     output = capture_log(fn -> FeedbackWorker.handle_info({:ssl, state.socket_feedback, ""}, state) end)
-    assert output =~ ~s("[APNS] Feedback received for token 1BECF2320BCD26819F96D2D75D58B5E81B11243286BC8E21F54C374AA44A9155)
-    assert output =~ ~s("[APNS] Feedback received for token 2BECF2320BCD26819F96D2D75D58B5E81B11243286BC8E21F54C374AA44A9155)
-    assert output =~ ~s("[APNS] Feedback received for token 3BECF2320BCD26819F96D2D75D58B5E81B11243286BC8E21F54C374AA44A9155)
+    assert_log output, "feedback received for token 1BECF2320BCD26819F96D2D75D58B5E81B11243286BC8E21F54C374AA44A9155"
+    assert_log output, "feedback received for token 2BECF2320BCD26819F96D2D75D58B5E81B11243286BC8E21F54C374AA44A9155"
+    assert_log output, "feedback received for token 3BECF2320BCD26819F96D2D75D58B5E81B11243286BC8E21F54C374AA44A9155"
   end
 
   defp feedback_frame(token) do

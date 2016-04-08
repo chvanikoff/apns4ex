@@ -6,9 +6,9 @@ defmodule APNS.Sender do
 
     case result do
       :ok ->
-        Logger.debug("[APNS] success sending ssl package")
+        APNS.Logger.debug("success sending ssl package")
       {:error, reason} ->
-        Logger.error("[APNS] error (#{reason}) sending ssl package")
+        APNS.Logger.error("error #{reason} sending ssl package")
     end
 
     result
@@ -19,10 +19,10 @@ defmodule APNS.Sender do
 
     case :ssl.connect(host, port, opts, timeout_seconds * 1000) do
       {:ok, socket} ->
-        Logger.debug("[APNS] connected to #{address}")
+        APNS.Logger.debug("successfully connected to #{address}")
         {:ok, socket}
       {:error, reason} ->
-        Logger.error "[APNS] failed to connect to push socket #{address}, reason given: #{inspect(reason)}"
+        APNS.Logger.error("failed to connect to push socket #{address}, reason given: #{inspect(reason)}")
         {:error, {:connection_failed, address}}
     end
   end

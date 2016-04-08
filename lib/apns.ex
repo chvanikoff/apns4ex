@@ -11,9 +11,16 @@ defmodule APNS do
   end
 
   def push(pool, %APNS.Message{} = message) do
+    APNS.Logger.debug(message, "sending in poolboy transaction #{inspect(pool)}")
+
     :poolboy.transaction(pool_name(pool), fn(pid) ->
       APNS.MessageWorker.send(pid, message)
     end)
+  end
+
+  def push_parallel(pool, %APNS.Message{} = message) do
+    Task.start(fn-> push(pool, message) end)
+    :ok
   end
 
   def start(_type, _args) do

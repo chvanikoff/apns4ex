@@ -16,7 +16,7 @@ defmodule APNS.FeedbackWorker do
   def connect(_, _state, sender \\ APNS.Sender)
 
   def connect(:reconnect, %{config: %{feedback_interval: interval}} = state, _sender) do
-    Logger.info("[APNS] closed connection, reconnecting in #{interval}s")
+    APNS.Logger.info("closed feedback connection, reconnecting in #{interval}s")
     {:backoff, interval * 1000, state}
   end
 
@@ -27,17 +27,17 @@ defmodule APNS.FeedbackWorker do
 
     case sender.connect_socket(host, port, opts, config.timeout) do
       {:ok, socket} ->
-        Logger.info("[APNS] successfully opened connection to feedback service")
+        APNS.Logger.info("successfully opened connection to feedback service")
         {:ok, %{state | socket_feedback: socket}}
       {:error, reason} ->
-        Logger.info("[APNS] error (#{inspect(reason)}) opening connection to feedback service")
+        APNS.Logger.info("error (#{inspect(reason)}) opening connection to feedback service")
         {:backoff, 1000, state}
     end
   end
 
   def disconnect({type, reason}, %{socket_feedback: socket} = state, sender \\ APNS.Sender) do
     :ok = sender.close(socket)
-    Logger.error("Connection #{inspect(type)}: #{inspect(reason)}")
+    APNS.Logger.error("connection #{inspect(type)}: #{inspect(reason)}")
 
     {:connect, :reconnect, %{state | socket_feedback: nil}}
   end

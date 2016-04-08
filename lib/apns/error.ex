@@ -10,7 +10,7 @@ defmodule APNS.Error do
     7 => "Invalid payload size",
     8 => "Invalid token",
     10 => "Shutdown",
-    255 => "None (unknown)"
+    255 => "None unknown"
   }
 
   defstruct [

@@ -10,6 +10,16 @@ defmodule APNS.FakeRetrier do
 
     {:ok, %{}}
   end
+
+  def push_parallel(pool, message) do
+    Logger.debug [
+      "APNS.FakeRetrier.push_parallel/2",
+      " pool: " <> inspect(pool),
+      " message: " <> inspect(message)
+    ]
+
+    {:ok, %{}}
+  end
 end
 
 defmodule APNS.FakeSender do
@@ -70,6 +80,15 @@ defmodule APNS.FakeSenderSendPackageFail do
 
   def close(socket) do
     APNS.FakeSender.close(socket)
+  end
+end
+
+defmodule APNS.TestHelper do
+  require ExUnit.Assertions
+  import ExUnit.Assertions
+
+  def assert_log(output, expected) do
+    assert output =~ ~r/\[APNS\] #PID<\d+.\d+.\d+> #{expected}/
   end
 end
 

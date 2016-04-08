@@ -11,56 +11,80 @@ defmodule APNS.MessageWorker do
   end
 
   def send(pid, message) do
-    Connection.call(pid, {:send, message})
+    APNS.Logger.debug(message, "sending message")
+    Connection.cast(pid, {:send, message})
   end
 
   def init(pool_conf) do
     state = APNS.State.get(pool_conf)
+    APNS.Logger.debug("init worker")
     {:connect, :init, state}
   end
 
   # -- server
-
   def connect(_, %{config: config, ssl_opts: opts} = state, sender \\ APNS.Sender) do
     host = to_char_list(config.apple_host)
     port = config.apple_port
 
     case sender.connect_socket(host, port, opts, config.timeout) do
-      {:ok, socket} -> {:ok, %{state | socket_apple: socket, counter: 0}}
-      {:error, _} -> {:backoff, 1000, state}
+      {:ok, socket} ->
+        APNS.Logger.debug("successfully connected to socket")
+        {:ok, %{state | socket_apple: socket, counter: 0}}
+      {:error, _} ->
+        APNS.Logger.debug("unable to connect to socket, backing off")
+        {:backoff, 1000, state}
     end
   end
 
   def disconnect({type, reason}, %{socket_apple: socket} = state) do
     :ok = :ssl.close(socket)
-    Logger.error("Connection #{inspect(type)}: #{inspect(reason)}")
+    APNS.Logger.warn("Connection #{inspect(type)}: #{inspect(reason)}")
 
     {:connect, :reconnect, %{state | socket_apple: nil}}
   end
 
-  def handle_call(_, _, %{socket_apple: nil} = state) do
-    {:reply, {:error, :closed}, state}
+  def handle_cast(_, %{socket_apple: nil} = state) do
+    APNS.Logger.debug("tried to send data on non-existing socket")
+    {:noreply, state}
   end
 
-  def handle_call({:send, %APNS.Message{} = message}, _, %{socket_apple: _socket} = state, sender \\ APNS.Sender, retrier \\ APNS) do
+  def handle_cast({:send, %APNS.Message{} = message}, %{socket_apple: _socket} = state, sender \\ APNS.Sender, retrier \\ APNS) do
+    APNS.Logger.debug(message, "handling call :send")
+
     case push(message, state, sender, retrier) do
       {:ok, state} ->
-        {:reply, :ok, state}
+        APNS.Logger.debug(message, "handle call :send received :ok")
+        {:noreply, state}
       {:error, reason, state} ->
-        Logger.info("[APNS] reconnecting worker #{inspect(self())} due to conection error #{inspect(reason)}")
-        {:disconnect, {:error, reason}, {:error, reason}, state}
+        APNS.Logger.debug(message, "reconnecting worker due to connection error #{inspect(reason)}")
+        {:disconnect, {:error, reason}, state}
     end
   end
 
   def handle_info({:ssl_closed, socket}, %{socket_apple: socket} = state) do
+    APNS.Logger.debug("ssl socket closed, returning :connect")
     {:connect, {:error, "ssl_closed"}, %{state | socket_apple: nil}}
   end
 
-  def handle_info({:ssl, socket, data}, %{socket_apple: socket} = state, retrier \\ APNS) do
+  def handle_info({:ssl_closed, _socket}, state) do
+    APNS.Logger.debug("received message about already closed ssl socket")
+    {:noreply, state}
+  end
+
+  def handle_info(_, state, retrier \\ APNS)
+
+  def handle_info({:ssl, socket, data}, %{socket_apple: socket} = state, retrier) do
+    APNS.Logger.debug("received :ssl callback, handling response…")
     {:noreply, handle_response(state, socket, data, retrier)}
   end
 
+  def handle_info({:ssl, _old_socket, data}, %{socket_apple: socket} = state, retrier) do
+    APNS.Logger.debug("received :ssl callback, on old socket handling response…")
+    handle_info({:ssl, socket, data}, state, retrier)
+  end
+
   defp push(%APNS.Message{token: token} = message, state, _sender, _retrier) when byte_size(token) != 64 do
+    APNS.Logger.debug(message, "message had bad token size")
     APNS.Error.new(message.id, 5) |> state.config.callback_module.error(token)
     {:ok, state}
   end
@@ -74,22 +98,24 @@ defmodule APNS.MessageWorker do
 
     case APNS.Payload.build_json(message, limit) do
       {:error, :payload_size_exceeded} ->
+        APNS.Logger.debug(message, "message had bad payload size")
         APNS.Error.new(message.id, @invalid_payload_size_code) |> state.config.callback_module.error()
         {:ok, state}
 
       payload ->
+        APNS.Logger.debug(message, "message's payload looks good")
         binary_payload = APNS.Package.to_binary(message, payload)
         case sender.send_package(socket, binary_payload) do
           :ok ->
-            Logger.debug("[APNS] success sending #{message.id} to #{message.token}")
+            APNS.Logger.debug(message, "success sending")
             {:ok, %{state | queue: [message | queue], counter: state.counter + 1}}
 
           {:error, reason} ->
             if message.retry_count >= 10 do
-              Logger.error("[APNS] #{message.retry_count}th error (#{reason}) sending #{message.id} to #{message.token} message will not be delivered")
+              APNS.Logger.error(message, "#{message.retry_count}th error #{reason} message will not be delivered")
             else
-              Logger.warn("[APNS] error (#{reason}) sending #{message.id} to #{message.token} retrying…")
-              retrier.push(state.pool, Map.put(message, :retry_count, message.retry_count + 1))
+              APNS.Logger.warn(message, "#{reason} retrying…")
+              retrier.push_parallel(state.pool, Map.put(message, :retry_count, message.retry_count + 1))
             end
 
             {:error, reason, %{state | queue: [], counter: 0}}
@@ -98,13 +124,18 @@ defmodule APNS.MessageWorker do
   end
 
   defp handle_response(state, socket, data, retrier) do
+    APNS.Logger.debug("handling response")
+
     case <<state.buffer_apple :: binary, data :: binary>> do
       <<8 :: 8, status :: 8, message_id :: integer-32, rest :: binary>> ->
         APNS.Error.new(message_id, status) |> state.config.callback_module.error()
 
         for message <- messages_after(state.queue, message_id) do
-          retrier.push(state.pool, message)
+          APNS.Logger.debug(message, "resending after bad message #{message_id}")
+          retrier.push_parallel(state.pool, message)
         end
+
+        APNS.Logger.debug("done resending messages after bad message #{message_id}")
 
         state = %{state | queue: []}
 
@@ -114,6 +145,7 @@ defmodule APNS.MessageWorker do
         end
 
       buffer ->
+        APNS.Logger.error("ignoring un-documented Apple write on socket")
         %{state | buffer_apple: buffer}
     end
   end
