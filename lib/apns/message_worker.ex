@@ -89,7 +89,7 @@ defmodule APNS.MessageWorker do
               Logger.error("[APNS] #{message.retry_count}th error (#{reason}) sending #{message.id} to #{message.token} message will not be delivered")
             else
               Logger.warn("[APNS] error (#{reason}) sending #{message.id} to #{message.token} retrying…")
-              retrier.send(state.pool, Map.put(message, :retry_count, message.retry_count + 1))
+              retrier.push(state.pool, Map.put(message, :retry_count, message.retry_count + 1))
             end
 
             {:error, reason, %{state | queue: [], counter: 0}}
@@ -103,7 +103,7 @@ defmodule APNS.MessageWorker do
         APNS.Error.new(message_id, status) |> state.config.callback_module.error()
 
         for message <- messages_after(state.queue, message_id) do
-          retrier.send(state.pool, message)
+          retrier.push(state.pool, message)
         end
 
         state = %{state | queue: []}

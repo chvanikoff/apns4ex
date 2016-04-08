@@ -120,7 +120,7 @@ defmodule APNS.MessageWorkerTest do
     end)
     assert output =~ ~s/[APNS] reconnecting worker #{inspect(self())} due to conection error "FakeSenderSendPackageFail failed"/
     assert output =~ ~s/[APNS] error (FakeSenderSendPackageFail failed) sending 23 to #{message.token} retrying…/
-    assert output =~ ~s(APNS.FakeRetrier.send/2 pool: :test)
+    assert output =~ ~s(APNS.FakeRetrier.push/2 pool: :test)
     assert output =~ ~s(id: 23)
   end
 
@@ -131,7 +131,7 @@ defmodule APNS.MessageWorkerTest do
       assert result == {:disconnect, {:error, "FakeSenderSendPackageFail failed"}, {:error, "FakeSenderSendPackageFail failed"}, state}
     end)
     assert output =~ ~s/[APNS] 10th error (FakeSenderSendPackageFail failed) sending 23 to #{message.token} message will not be delivered/
-    refute output =~ ~s(APNS.FakeRetrier.send/2 pool: :test)
+    refute output =~ ~s(APNS.FakeRetrier.push/2 pool: :test)
   end
 
   test "handle_call :send counts number of pushes", %{state: state, message: message} do
@@ -203,7 +203,7 @@ defmodule APNS.MessageWorkerTest do
     queue = [message4, message3, message2, message1]
 
     output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(8, queue), FakeRetrier) end)
-    assert output =~ ~s(APNS.FakeRetrier.send/2 pool: :test)
+    assert output =~ ~s(APNS.FakeRetrier.push/2 pool: :test)
     assert output =~ ~s(id: 4)
     assert output =~ ~s(id: 3)
     refute output =~ ~s(id: 1234)
