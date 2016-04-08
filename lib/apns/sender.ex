@@ -1,6 +1,4 @@
 defmodule APNS.Sender do
-  require Logger
-
   def send_package(socket, packet) do
     result = :ssl.send(socket, [packet])
 
@@ -8,7 +6,7 @@ defmodule APNS.Sender do
       :ok ->
         APNS.Logger.debug("success sending ssl package")
       {:error, reason} ->
-        APNS.Logger.error("error #{reason} sending ssl package")
+        APNS.Logger.warn("error #{reason} sending ssl package")
     end
 
     result

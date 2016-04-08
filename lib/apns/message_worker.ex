@@ -1,6 +1,5 @@
 defmodule APNS.MessageWorker do
   use Connection
-  require Logger
 
   @payload_max_old 256
   @payload_max_new 2048

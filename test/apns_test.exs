@@ -4,8 +4,6 @@ defmodule APNSTest do
   import ExUnit.CaptureLog
   import APNS.TestHelper
 
-  require Logger
-
   @moduletag :capture_log
 
   setup do

@@ -1,6 +1,5 @@
 defmodule APNS.FeedbackWorker do
   use Connection
-  require Logger
 
   def start_link(pool_conf) do
     Connection.start_link(__MODULE__, pool_conf, [])
