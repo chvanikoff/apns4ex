@@ -9,6 +9,6 @@ config :apns,
       env: :dev,
       certfile: {:apns, "certs/dev.pem"},
       pool_size: 10,
-      pool_max_overflow: 5
+      pool_max_overflow: 0 # WARNING: more than zero overflow seems bad!
     ]
   ]

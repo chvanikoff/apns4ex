@@ -76,7 +76,9 @@ config :apns,
 |:------------------|:-----------------------------------------------------------------------------|
 | env               | :dev for Apple sandbox push server or :prod for Apple production push server |
 | pool_size         | Maximum pool size                                                            |
-| pool_max_overflow | Maximum number of workers created if pool is empty                           |
+| pool_max_overflow | Maximum number of workers created if pool is empty*                          |
+
+\* WARNING: According to our tests a overflow other then zero is bad.
 
 All pools defined in config will be started automatically
 
