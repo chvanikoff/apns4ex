@@ -30,14 +30,14 @@ defmodule APNS.MessageWorker do
         APNS.Logger.debug("successfully connected to socket")
         {:ok, %{state | socket_apple: socket, counter: 0}}
       {:error, _} ->
-        APNS.Logger.debug("unable to connect to socket, backing off")
+        APNS.Logger.warn("unable to connect to socket, backing off")
         {:backoff, 1000, state}
     end
   end
 
   def disconnect({type, reason}, %{socket_apple: socket} = state) do
     :ok = :ssl.close(socket)
-    APNS.Logger.warn("Connection #{inspect(type)}: #{inspect(reason)}")
+    APNS.Logger.debug("socket disconnected #{inspect(type)}: #{inspect(reason)}")
 
     {:connect, :reconnect, %{state | socket_apple: nil}}
   end
@@ -55,7 +55,7 @@ defmodule APNS.MessageWorker do
         APNS.Logger.debug(message, "handle call :send received :ok")
         {:noreply, state}
       {:error, reason, state} ->
-        APNS.Logger.debug(message, "reconnecting worker due to connection error #{inspect(reason)}")
+        APNS.Logger.warn(message, "reconnecting worker due to connection error #{inspect(reason)}")
         {:disconnect, {:error, reason}, state}
     end
   end
@@ -83,7 +83,6 @@ defmodule APNS.MessageWorker do
   end
 
   defp push(%APNS.Message{token: token} = message, state, _sender, _retrier) when byte_size(token) != 64 do
-    APNS.Logger.debug(message, "message had bad token size")
     APNS.Error.new(message.id, 5) |> state.config.callback_module.error(token)
     {:ok, state}
   end
@@ -97,7 +96,6 @@ defmodule APNS.MessageWorker do
 
     case APNS.Payload.build_json(message, limit) do
       {:error, :payload_size_exceeded} ->
-        APNS.Logger.debug(message, "message had bad payload size")
         APNS.Error.new(message.id, @invalid_payload_size_code) |> state.config.callback_module.error()
         {:ok, state}
 
@@ -134,7 +132,7 @@ defmodule APNS.MessageWorker do
           retrier.push_parallel(state.pool, message)
         end
 
-        APNS.Logger.debug("done resending messages after bad message #{message_id}")
+        APNS.Logger.info("done resending messages after bad message #{message_id}")
 
         state = %{state | queue: []}
 

@@ -29,7 +29,7 @@ defmodule APNS.FeedbackWorker do
         APNS.Logger.info("successfully opened connection to feedback service")
         {:ok, %{state | socket_feedback: socket}}
       {:error, reason} ->
-        APNS.Logger.info("error (#{inspect(reason)}) opening connection to feedback service")
+        APNS.Logger.warn("error (#{inspect(reason)}) opening connection to feedback service")
         {:backoff, 1000, state}
     end
   end
