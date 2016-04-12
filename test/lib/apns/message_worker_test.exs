@@ -94,7 +94,7 @@ defmodule APNS.MessageWorkerTest do
     output = capture_log(fn ->
       assert MessageWorker.handle_cast({:send, message}, state, FakeSender, FakeRetrier) == {:noreply, state}
     end)
-    assert_log output, ~s(error "Invalid payload size" for message 23)
+    assert_log output, ~s(error "Invalid payload size" for message 23 to #{message.token})
   end
 
   @tag :pending # shouldn't this pass? See APNS.Payload.to_json

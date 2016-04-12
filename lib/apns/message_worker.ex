@@ -87,7 +87,7 @@ defmodule APNS.MessageWorker do
     {:ok, state}
   end
 
-  defp push(%APNS.Message{} = message, %{config: config, socket_apple: socket, queue: queue} = state, sender, retrier) do
+  defp push(%APNS.Message{token: token} = message, %{config: config, socket_apple: socket, queue: queue} = state, sender, retrier) do
     limit = case message.support_old_ios do
       nil -> config.payload_limit
       true -> @payload_max_old
@@ -96,7 +96,7 @@ defmodule APNS.MessageWorker do
 
     case APNS.Payload.build_json(message, limit) do
       {:error, :payload_size_exceeded} ->
-        APNS.Error.new(message.id, @invalid_payload_size_code) |> state.config.callback_module.error()
+        APNS.Error.new(message.id, @invalid_payload_size_code) |> state.config.callback_module.error(token)
         {:ok, state}
 
       payload ->
