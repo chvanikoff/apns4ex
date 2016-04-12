@@ -10,16 +10,6 @@ defmodule APNS.FakeRetrier do
 
     {:ok, %{}}
   end
-
-  def push_parallel(pool, message) do
-    Logger.debug [
-      "APNS.FakeRetrier.push_parallel/2",
-      " pool: " <> inspect(pool),
-      " message: " <> inspect(message)
-    ]
-
-    {:ok, %{}}
-  end
 end
 
 defmodule APNS.FakeSender do

@@ -18,11 +18,6 @@ defmodule APNS do
     end)
   end
 
-  def push_parallel(pool, %APNS.Message{} = message) do
-    Task.start(fn-> push(pool, message) end)
-    :ok
-  end
-
   def start(_type, _args) do
     opts = [strategy: :one_for_one, name: APNS.Supervisor]
     supervisor = Supervisor.start_link([], opts)

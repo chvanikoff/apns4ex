@@ -112,7 +112,7 @@ defmodule APNS.MessageWorker do
               APNS.Logger.error(message, "#{message.retry_count}th error #{reason} message will not be delivered")
             else
               APNS.Logger.warn(message, "#{reason} retrying…")
-              retrier.push_parallel(state.pool, Map.put(message, :retry_count, message.retry_count + 1))
+              retrier.push(state.pool, Map.put(message, :retry_count, message.retry_count + 1))
             end
 
             {:error, reason, %{state | queue: [], counter: 0}}
@@ -129,7 +129,7 @@ defmodule APNS.MessageWorker do
 
         for message <- messages_after(state.queue, message_id) do
           APNS.Logger.debug(message, "resending after bad message #{message_id}")
-          retrier.push_parallel(state.pool, message)
+          retrier.push(state.pool, message)
         end
 
         APNS.Logger.info("done resending messages after bad message #{message_id}")
