@@ -183,8 +183,12 @@ defmodule APNS.MessageWorkerTest do
   end
 
   test "handle_info :ssl calls error callback if status byte is 8" do
-    output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(8)) end)
-    assert_log output, ~s(error "Invalid token" for message 1234)
+    message1 = APNS.Message.new(1) |> Map.put(:token, "zxcv")
+    message2 = APNS.Message.new(1234) |> Map.put(:token, "asdf")
+    queue = [message2, message1]
+
+    output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(8, queue)) end)
+    assert_log output, ~s(error "Invalid token" for message 1234 to asdf)
   end
 
   test "handle_info :ssl calls error callback if status byte is 10" do
@@ -195,6 +199,11 @@ defmodule APNS.MessageWorkerTest do
   test "handle_info :ssl calls error callback if status byte is 255" do
     output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(255)) end)
     assert_log output, ~s(error "None unknown" for message 1234 to unknown token)
+  end
+
+  test "handle_info :ssl logs error if message can't be found in queue" do
+    output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(8)) end)
+    assert_log output, ~s(message 1234 not found in queue)
   end
 
   test "handle_info :ssl retries messages later in queue" do

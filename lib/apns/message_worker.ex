@@ -120,14 +120,15 @@ defmodule APNS.MessageWorker do
     end
   end
 
-  defp handle_response(state, socket, data, retrier) do
+  defp handle_response(%{queue: queue} = state, socket, data, retrier) do
     APNS.Logger.debug("handling response")
 
     case <<state.buffer_apple :: binary, data :: binary>> do
       <<8 :: 8, status :: 8, message_id :: integer-32, rest :: binary>> ->
-        APNS.Error.new(message_id, status) |> state.config.callback_module.error()
+        token = message_token(queue, message_id)
+        APNS.Error.new(message_id, status) |> state.config.callback_module.error(token)
 
-        for message <- messages_after(state.queue, message_id) do
+        for message <- messages_after(queue, message_id) do
           APNS.Logger.debug(message, "resending after bad message #{message_id}")
           retrier.push(state.pool, message)
         end
@@ -144,6 +145,16 @@ defmodule APNS.MessageWorker do
       buffer ->
         APNS.Logger.error("ignoring un-documented Apple write on socket")
         %{state | buffer_apple: buffer}
+    end
+  end
+
+  defp message_token(queue, message_id) do
+    case Enum.find(queue, fn(message) -> message.id == message_id end) do
+      nil ->
+        APNS.Logger.error("message #{message_id} not found in queue")
+        "unknown token"
+      message ->
+        message.token
     end
   end
 
