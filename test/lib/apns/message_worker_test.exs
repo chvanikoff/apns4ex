@@ -202,8 +202,14 @@ defmodule APNS.MessageWorkerTest do
   end
 
   test "handle_info :ssl logs error if message can't be found in queue" do
-    output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(8)) end)
+    message = APNS.Message.new(1)
+    output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(8, [message])) end)
     assert_log output, ~s(message 1234 not found in queue)
+  end
+
+  test "handle_info :ssl logs debug if queue is empty" do
+    output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(8)) end)
+    assert_log output, ~s(message 1234 not found in empty queue)
   end
 
   test "handle_info :ssl retries messages later in queue" do

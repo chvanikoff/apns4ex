@@ -148,10 +148,15 @@ defmodule APNS.MessageWorker do
     end
   end
 
+  defp message_token([], message_id) do
+    APNS.Logger.debug("message #{message_id} not found in empty queue")
+    "unknown token"
+  end
+
   defp message_token(queue, message_id) do
     case Enum.find(queue, fn(message) -> message.id == message_id end) do
       nil ->
-        APNS.Logger.error("message #{message_id} not found in queue")
+        APNS.Logger.error("message #{message_id} not found in queue #{inspect(queue)}")
         "unknown token"
       message ->
         message.token
