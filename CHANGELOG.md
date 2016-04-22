@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.0 MAJOR UPDATE (2016-04-22)
+* Merged PR #32 which introducec major rearchitecture of the library hence the version update
+* Resend notifications on failures
+* Tests
+* Better message expiration support
+* SSL retry limit
+* And more smaller enhancements
+
+Note that old version is available in `0.0.x-stable` branch
+
 ## 0.0.13 (2016-03-23)
 
 * Merged PR #26 with README update
