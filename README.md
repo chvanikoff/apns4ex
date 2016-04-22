@@ -4,14 +4,14 @@ The library was inspired by [Apns4erl](https://github.com/inaka/apns4erl)
 
 ## Warning
 
-This library is a work in progress and it's API is subject to change till `v0.1`, please consider use of `== ver` operator rather than `~> ver` when requiring `apns4ex` as a dependency or your application may be broken with next release of the library.
+The older version of the library is available in `0.0.x-stable` branch
 
 ## Installation
 
   1. Add apns to your list of dependencies in mix.exs:
 
         def deps do
-          [{:apns, "== 0.0.12"}]
+          [{:apns, "~> 0.9.0"}]
         end
 
   2. Ensure apns is started before your application:
@@ -38,7 +38,7 @@ config :apns,
     app1_dev_pool: [
       env: :dev,
       pool_size: 10,
-      pool_max_overflow: 5,
+      pool_max_overflow: 0,
       # and this is overwritten config key
       certfile: "/path/to/app1_dev.pem"
     ],
@@ -46,7 +46,7 @@ config :apns,
       env: :prod,
       certfile: "/path/to/app1_prod.pem",
       pool_size: 100,
-      pool_max_overflow: 50
+      pool_max_overflow: 0
     ],
   ]
 ```
