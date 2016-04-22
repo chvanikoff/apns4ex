@@ -2,7 +2,8 @@ defmodule APNS.Message do
   defstruct [
     id: nil,
     category: nil,
-    expiry: 86400000,
+    expiry: 60,
+    generated_at: nil,
     token: "",
     content_available: nil,
     alert: "",
@@ -10,15 +11,20 @@ defmodule APNS.Message do
     sound: "default",
     priority: 10,
     extra: [],
-    support_old_ios: nil
+    support_old_ios: nil,
+    retry_count: 0
   ]
 
   def new do
-    make_ref
-    |> :erlang.phash2
-    |> new
+    make_ref() |> :erlang.phash2() |> new()
   end
-  def new(id), do: %__MODULE__{id: id}
+
+  def new(id) when is_number(id) do
+    %__MODULE__{
+      id: id,
+      generated_at: :os.system_time(:seconds)
+    }
+  end
 
   defmodule Loc do
     defstruct [
