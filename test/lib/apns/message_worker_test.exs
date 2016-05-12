@@ -75,6 +75,10 @@ defmodule APNS.MessageWorkerTest do
     assert {:ok, %{config: %{apple_host: "host.apple"}}} = MessageWorker.connect(:anything, state, FakeSender)
   end
 
+  test "connect resets the queue", %{state: state} do
+    assert {:ok, %{queue: []}} = MessageWorker.connect(:anything, %{state | queue: [1, 2, 3]}, FakeSender)
+  end
+
   test "connect returns error if connection failed", %{state: state} do
     result = MessageWorker.connect(:anything, state, APNS.FakeSenderConnectFail)
     assert result == {:backoff, 1000, state}
@@ -225,6 +229,21 @@ defmodule APNS.MessageWorkerTest do
     assert output =~ ~s(id: 3)
     refute output =~ ~s(id: 1234)
     refute output =~ ~s(id: 1)
+  end
+
+  test "handle_info :ssl does not retry messages later in queue if bad message is not in queue" do
+    message1 = APNS.Message.new(1)
+    message2 = APNS.Message.new(2)
+    message3 = APNS.Message.new(3)
+    message4 = APNS.Message.new(4)
+    queue = [message4, message3, message2, message1]
+
+    output = capture_log(fn -> MessageWorker.handle_info({:ssl, "socket", ""}, response_state(8, queue), FakeRetrier) end)
+    refute output =~ ~s(APNS.FakeRetrier.push/2 pool: :test)
+    refute output =~ ~s(4: resending after bad message 1234)
+    refute output =~ ~s(3: resending after bad message 1234)
+    refute output =~ ~s(2: resending after bad message 1234)
+    refute output =~ ~s(1: resending after bad message 1234)
   end
 
   test "handle_info :ssl clears queue on error" do

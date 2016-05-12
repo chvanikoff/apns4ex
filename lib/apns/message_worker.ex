@@ -28,7 +28,7 @@ defmodule APNS.MessageWorker do
     case sender.connect_socket(host, port, opts, config.timeout) do
       {:ok, socket} ->
         APNS.Logger.debug("successfully connected to socket")
-        {:ok, %{state | socket_apple: socket, counter: 0}}
+        {:ok, %{state | socket_apple: socket, counter: 0, queue: []}}
       {:error, _} ->
         APNS.Logger.warn("unable to connect to socket, backing off")
         {:backoff, 1000, state}
@@ -164,6 +164,10 @@ defmodule APNS.MessageWorker do
   end
 
   defp messages_after(queue, failed_id) do
-    Enum.take_while(queue, fn(message) -> message.id != failed_id end)
+    if Enum.find(queue, fn(message) -> message.id == failed_id end) do
+      Enum.take_while(queue, fn(message) -> message.id != failed_id end)
+    else
+      []
+    end
   end
 end
