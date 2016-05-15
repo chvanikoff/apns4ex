@@ -26,4 +26,11 @@ defmodule APNSTest do
     output = capture_log(fn -> assert :ok = APNS.push(:test, message) end)
     assert_log output, "23:1becf2 sending message"
   end
+
+  @tag :real
+  test "push_sync/2 pushes message to worker synchronously", %{message: message} do
+    output = capture_log(fn -> assert :ok = APNS.push_sync(:test, message) end)
+    assert_log output, "23:1becf2 sending message"
+    assert {:error, _} = APNS.push_sync(:test, Map.put(message, :token, "badtoken"))
+  end
 end

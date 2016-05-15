@@ -14,6 +14,11 @@ defmodule APNS.MessageWorker do
     Connection.cast(pid, {:send, message})
   end
 
+  def send_sync(pid, message) do
+    APNS.Logger.debug(message, "sending message")
+    Connection.call(pid, {:send, message})
+  end
+
   def init(pool_conf) do
     state = APNS.State.get(pool_conf)
     APNS.Logger.debug("init worker")
@@ -47,11 +52,25 @@ defmodule APNS.MessageWorker do
     {:noreply, state}
   end
 
-  def handle_cast({:send, %APNS.Message{} = message}, %{socket_apple: _socket} = state, sender \\ APNS.Sender, retrier \\ APNS) do
+  def handle_call({:send, %APNS.Message{} = message}, _from, %{socket_apple: _socket} = state, sender \\ APNS.Sender, retrier \\ APNS) do
     APNS.Logger.debug(message, "handling call :send")
 
     case push(message, state, sender, retrier) do
-      {:ok, state} ->
+      {:ok, response, state} ->
+        APNS.Logger.debug(message, "handle call :send received :ok")
+        {:reply, response, state}
+      {:error, reason, state} ->
+        APNS.Logger.warn(message, "reconnecting worker due to connection error #{inspect(reason)}")
+        err = {:error, reason}
+        {:disconnect, err, err, state}
+    end
+  end
+
+  def handle_cast({:send, %APNS.Message{} = message}, %{socket_apple: _socket} = state, sender \\ APNS.Sender, retrier \\ APNS) do
+    APNS.Logger.debug(message, "handling cast :send")
+
+    case push(message, state, sender, retrier) do
+      {:ok, _, state} ->
         APNS.Logger.debug(message, "handle call :send received :ok")
         {:noreply, state}
       {:error, reason, state} ->
@@ -84,7 +103,7 @@ defmodule APNS.MessageWorker do
 
   defp push(%APNS.Message{token: token} = message, state, _sender, _retrier) when byte_size(token) != 64 do
     APNS.Error.new(message.id, 5) |> state.config.callback_module.error(token)
-    {:ok, state}
+    {:ok, {:error, :invalid_token_size}, state}
   end
 
   defp push(%APNS.Message{token: token} = message, %{config: config, socket_apple: socket, queue: queue} = state, sender, retrier) do
@@ -95,9 +114,9 @@ defmodule APNS.MessageWorker do
     end
 
     case APNS.Payload.build_json(message, limit) do
-      {:error, :payload_size_exceeded} ->
+      {:error, :payload_size_exceeded} = err ->
         APNS.Error.new(message.id, @invalid_payload_size_code) |> state.config.callback_module.error(token)
-        {:ok, state}
+        {:ok, err, state}
 
       payload ->
         APNS.Logger.debug(message, "message's payload looks good")
@@ -105,7 +124,7 @@ defmodule APNS.MessageWorker do
         case sender.send_package(socket, binary_payload) do
           :ok ->
             APNS.Logger.debug(message, "success sending")
-            {:ok, %{state | queue: [message | queue], counter: state.counter + 1}}
+            {:ok, :ok, %{state | queue: [message | queue], counter: state.counter + 1}}
 
           {:error, reason} ->
             if message.retry_count >= 10 do

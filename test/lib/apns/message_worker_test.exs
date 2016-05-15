@@ -36,12 +36,7 @@ defmodule APNS.MessageWorkerTest do
   end
 
   @tag :real
-  test "handle_cast :send calls GenServer", %{token: token} do
-    message =
-      APNS.Message.new(23)
-      |> Map.put(:token, token)
-      |> Map.put(:alert, "Lorem ipsum dolor sit amet, consectetur adipisicing elit")
-
+  test "handle_cast :send calls GenServer", %{message: message} do
     :ok = MessageWorker.send(self(), message)
     assert_receive {_, {:send, ^message}}
   end
@@ -92,6 +87,16 @@ defmodule APNS.MessageWorkerTest do
     end)
     assert_log output, ~s(error "Invalid token size" for message 23 to #{token})
   end
+
+  test "handle_call :send calls error callback and returns error if token is invalid size", %{state: state, message: message} do
+    token = String.duplicate("0", 63)
+    message = Map.put(message, :token, token)
+    output = capture_log(fn ->
+      assert MessageWorker.handle_call({:send, message}, nil, state, FakeSender, FakeRetrier) == {:reply, {:error, :invalid_token_size}, state}
+    end)
+    assert_log output, ~s(error "Invalid token size" for message 23 to #{token})
+  end
+
 
   test "handle_cast :send calls error callback if payload is too big", %{state: state, message: message} do
     state = put_in(state, [:config, :payload_limit], 10)
