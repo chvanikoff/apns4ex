@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.9.1 (2016-05-21)
+## 0.9.2 (2016-05-16)
+* Poison version updated to 2.1
+
+## 0.9.1 (2016-05-12)
 * Merged PR #38 which deals with a cornercase condition when Apple returns messages with 0 id
 
 ## 0.9.0 MAJOR UPDATE (2016-04-22)
