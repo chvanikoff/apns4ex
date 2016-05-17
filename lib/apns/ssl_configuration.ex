@@ -47,7 +47,7 @@ defmodule APNS.SslConfiguration do
   defp key(%{key: nil} = config), do: config
   defp key(%{key: binary_key} = config) do
     [{:RSAPrivateKey, key_der, _}] = :public_key.pem_decode(binary_key)
-    Map.put(config, :key, key_der)
+    Map.put(config, :key, {:RSAPrivateKey, key_der})
   end
 
   defp keyfile(%{keyfile: nil} = config), do: config
