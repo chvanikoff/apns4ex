@@ -2,11 +2,7 @@ defmodule APNS do
   use Application
 
   def push(pool, token, alert) do
-    message =
-      APNS.Message.new
-      |> Map.put(:token, token)
-      |> Map.put(:alert, alert)
-
+    message = make_message(token, alert)
     push(pool, message)
   end
 
@@ -15,6 +11,19 @@ defmodule APNS do
 
     :poolboy.transaction(pool_name(pool), fn(pid) ->
       APNS.MessageWorker.send(pid, message)
+    end)
+  end
+
+  def push_sync(pool, token, alert) do
+    message = make_message(token, alert)
+    push_sync(pool, message)
+  end
+
+  def push_sync(pool, %APNS.Message{} = message) do
+    APNS.Logger.debug(message, "sending in poolboy transaction #{inspect(pool)}")
+
+    :poolboy.transaction(pool_name(pool), fn(pid) ->
+      APNS.MessageWorker.send_sync(pid, message)
     end)
   end
 
@@ -51,5 +60,11 @@ defmodule APNS do
 
   defp worker_name(type, pool) do
     String.to_atom("#{type}_worker_#{pool_name(pool)}")
+  end
+
+  defp make_message(token, alert) do
+    APNS.Message.new
+    |> Map.put(:token, token)
+    |> Map.put(:alert, alert)
   end
 end
