@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.9.3 (2016-07-19)
+* A fix for certificate keys parsing (thanks @tuvistavie)
+
 ## 0.9.2 (2016-05-16)
 * Poison version updated to 2.1
 
