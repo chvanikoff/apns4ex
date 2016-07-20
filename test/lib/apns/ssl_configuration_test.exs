@@ -23,4 +23,15 @@ defmodule APNS.SslConfigurationTest do
     configuration = SslConfiguration.get(cert_password: "secret")
     assert Keyword.fetch!(configuration, :password) == 'secret'
   end
+
+  test "key and cert" do
+    certs = Path.expand("../../../priv/certs", __DIR__)
+    opts = [
+      cert: File.read!(Path.join(certs, "dev.crt")),
+      key: File.read!(Path.join(certs, "dev.key"))
+    ]
+    configuration = SslConfiguration.get(opts)
+    assert is_binary(Keyword.fetch!(configuration, :cert))
+    assert {:RSAPrivateKey, _key} = Keyword.fetch!(configuration, :key)
+  end
 end
