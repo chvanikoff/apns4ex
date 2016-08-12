@@ -24,7 +24,8 @@ defmodule APNS.Mixfile do
       :public_key,
       :ssl,
       :poison,
-      :poolboy
+      :poolboy,
+      :connection
     ],
     mod: {APNS, []}]
   end
