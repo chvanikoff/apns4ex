@@ -102,7 +102,23 @@ APNS.push :app1_prod_pool, "0000000000000000000000000000000000000000000000000000
 
 ## Handling APNS errors and feedback
 
-You can define callback handler module via config param `callback_module`, the module should implement 2 functions: `error/1` and `feedback/1`. These functions will be called when APNS responds with error or feedback to the app. `%APNS.Error` and `%APNS.Feedback` structs are passed to the functions accordingly.
+You can define a callback handler module via config param `callback_module`. The module should implement 2 functions:
+
+* `error/2` which receives `%APNS.Error{}` and `token`
+* `feedback/1` which receives `%APNS.Feedback{}`
+
+```elixir
+  defmodule APNS.Callback do
+    def error(error = %APNS.Error{}, token) do
+      # handle error
+    end
+
+    def feedback(feedback = %APNS.Feedback{}) do
+      # handle feedback
+    end
+  end
+```
+
 
 ## Structs
 
