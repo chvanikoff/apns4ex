@@ -132,6 +132,7 @@ defstruct [
   alert: "",
   badge: nil,
   sound: "default",
+  mutable_content: nil,
   priority: 10,
   extra: [],
   support_old_ios: nil

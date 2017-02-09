@@ -1,6 +1,6 @@
 defmodule APNS.Payload do
   defmodule Aps do
-    defstruct [:sound, :category, :badge, :content_available, :alert]
+    defstruct [:sound, :category, :badge, :content_available, :alert, :mutable_content]
   end
 
   import APNS.Utils.Map, only: [compact: 1, rename_key: 3]
@@ -33,6 +33,7 @@ defmodule APNS.Payload do
       struct(%APNS.Payload.Aps{}, Map.from_struct(message))
       |> Map.from_struct()
       |> rename_key(:content_available, :'content-available')
+      |> rename_key(:mutable_content, :'mutable-content')
       |> compact()
 
     Map.put(payload, :aps, merged)
