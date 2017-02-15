@@ -39,12 +39,13 @@ config :apns,
       env: :dev,
       pool_size: 10,
       pool_max_overflow: 0,
-      # and this is overwritten config key
-      certfile: "/path/to/app1_dev.pem"
+      certfile: "/path/to/cert.pem",
+      keyfile: "/path/to/key.pem"
     ],
     app1_prod_pool: [
       env: :prod,
-      certfile: "/path/to/app1_prod.pem",
+      certfile: "/path/to/cert.pem",
+      keyfile: "/path/to/key.pem",
       pool_size: 100,
       pool_max_overflow: 0
     ],
