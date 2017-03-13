@@ -80,6 +80,11 @@ defmodule APNS.PayloadTest do
     assert json_payload(message)["aps"]["content-available"] == "my content_available"
   end
 
+  test "build_json adds mutable_content if present", %{message: message} do
+    message = Map.put(message, :mutable_content, 1)
+    assert json_payload(message)["aps"]["mutable-content"] == 1
+  end
+
   test "build_json adds extra if present", %{message: message} do
     message = Map.put(message, :extra, %{customkey: "my extra"})
     assert json_payload(message)["customkey"] == "my extra"
