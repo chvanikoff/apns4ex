@@ -31,7 +31,7 @@ defmodule APNS do
     opts = [strategy: :one_for_one, name: APNS.Supervisor]
     supervisor = Supervisor.start_link([], opts)
 
-    pools = Application.get_env(:apns, :pools)
+    pools = Application.get_env(:apns, :pools, [])
     pools |> Enum.map(fn({name, conf}) -> connect_pool(name, conf) end)
 
     supervisor
