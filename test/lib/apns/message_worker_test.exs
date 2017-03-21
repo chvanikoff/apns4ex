@@ -76,7 +76,7 @@ defmodule APNS.MessageWorkerTest do
 
   test "connect returns error if connection failed", %{state: state} do
     result = MessageWorker.connect(:anything, state, APNS.FakeSenderConnectFail)
-    assert result == {:backoff, 1000, state}
+    assert result == {:backoff, 10000, state}
   end
 
   test "handle_cast :send calls error callback if token is invalid size", %{state: state, message: message} do

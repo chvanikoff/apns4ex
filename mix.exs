@@ -4,12 +4,12 @@ defmodule APNS.Mixfile do
   def project do
     [
       app: :apns,
-      version: "0.9.4",
+      version: "0.9.6",
       elixir: "~> 1.0",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
-      deps: deps,
-      package: package,
+      deps: deps(),
+      package: package(),
       name: "apns4ex",
       source_url: "https://github.com/chvanikoff/apns4ex",
       description: """
@@ -32,7 +32,7 @@ defmodule APNS.Mixfile do
 
   defp deps do
     [
-      {:poison, "~> 1.5 or ~> 2.1"},
+      {:poison, "~> 1.5 or ~> 2.1 or ~>3.0"},
       {:poolboy, "~> 1.5"},
       {:connection, "~> 1.0.2"},
       {:ex_doc, ">= 0.0.0", only: :dev}

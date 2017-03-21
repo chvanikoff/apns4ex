@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.6 (2017-03-14)
+A bigger than usual update
+- merged PR#49, PR#53, PR#54
+- Added a backoff timeout, it will use `timeout` from config instead just 1 seconds
+- Minor clean up and test fixes
+- Better logging when connection fails
+- Elixir 1.4 compatibility (removed warnings)
+- Library/dependency updates
+
 ## 0.9.3 (2016-07-19)
 * A fix for certificate keys parsing (thanks @tuvistavie)
 

@@ -54,7 +54,7 @@ defmodule APNS.FeedbackWorkerTest do
   end
 
   test "connect returns :backoff when connection is unsuccessful", %{state: state} do
-    assert {:backoff, 1000, state} == FeedbackWorker.connect(:anything, state, APNS.FakeSenderConnectFail)
+    assert {:backoff, 9000, state} == FeedbackWorker.connect(:anything, state, APNS.FakeSenderConnectFail)
   end
 
   test "disconnect reconnects and removes socket from state", %{state: state} do
@@ -108,7 +108,7 @@ defmodule APNS.FeedbackWorkerTest do
   defp start_worker do
     {:ok, worker} = FeedbackWorker.start_link([
       env: :dev,
-      certfile: {:apns, "certs/dev.pem"},
+      certfile: {:apns, "certs/dev.crt"},
       pool: :test,
       cert_password: '4epVi6VwfjvlrBZYLsoy4fAC4noef5Y'
     ])
