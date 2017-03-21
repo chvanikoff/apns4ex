@@ -1,8 +1,6 @@
 defmodule APNS.PackageTest do
   use ExUnit.Case
 
-  @payload_min_size 38
-
   setup do
     message =
       APNS.Message.new(123)

@@ -3,8 +3,6 @@ defmodule APNS.StateTest do
 
   alias APNS.State
 
-  @payload_min_size 38
-
   test "get adds merged application defaults with APNS.Configuration defaults and Application level config" do
     configuration = State.get([pool: :test])
 

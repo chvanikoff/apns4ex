@@ -35,8 +35,8 @@ defmodule APNS.MessageWorker do
         APNS.Logger.debug("successfully connected to socket")
         {:ok, %{state | socket_apple: socket, counter: 0, queue: []}}
       {:error, _} ->
-        APNS.Logger.warn("unable to connect to socket, backing off")
-        {:backoff, 1000, state}
+        APNS.Logger.warn("unable to connect to socket, backing off for #{config.timeout} seconds")
+        {:backoff, config.timeout * 1000, state}
     end
   end
 

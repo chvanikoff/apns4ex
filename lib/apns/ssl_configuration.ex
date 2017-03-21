@@ -46,10 +46,14 @@ defmodule APNS.SslConfiguration do
 
   defp key(%{key: nil} = config), do: config
   defp key(%{key: binary_key} = config) do
-    [{:RSAPrivateKey, key_der, _}] = :public_key.pem_decode(binary_key)
-    Map.put(config, :key, {:RSAPrivateKey, key_der})
+    [{:PrivateKeyInfo, key_der, _}] = :public_key.pem_decode(binary_key)
+    Map.put(config, :key, {:PrivateKeyInfo, key_der})
   end
 
   defp keyfile(%{keyfile: nil} = config), do: config
-  defp keyfile(%{keyfile: binary_keyfile} = config), do: Map.put(config, :keyfile, Path.absname(binary_keyfile))
+  defp keyfile(%{keyfile: binary_keyfile} = config) when is_binary(binary_keyfile), do: Map.put(config, :keyfile, Path.absname(binary_keyfile))
+  defp keyfile(%{keyfile: {app_name, path}} = config) when is_atom(app_name) do
+    path = Path.expand(path, :code.priv_dir(app_name))
+    Map.put(config, :keyfile, path)
+  end
 end

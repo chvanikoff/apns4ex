@@ -11,7 +11,7 @@ The older version of the library is available in `0.0.x-stable` branch
   1. Add apns to your list of dependencies in mix.exs:
 
         def deps do
-          [{:apns, "~> 0.9.1"}]
+          [{:apns, "~> 0.9.6"}]
         end
 
   2. Ensure apns is started before your application:
